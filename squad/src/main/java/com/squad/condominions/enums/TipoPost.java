@@ -1,15 +1,12 @@
 package com.squad.condominions.enums;
 
-public enum TipoTag {
-    FIXADO('F'),
-    ELOGIO('E'),
-    RECLAMACAO('R'),
-    ALERTA('A'),
-    NULA('N');
+public enum TipoPost {
+    FORUM('F'),
+    OCORRENCIA('O');
 
     private final Character codigo;
 
-    TipoTag(Character codigo) {
+    TipoPost(Character codigo) {
         this.codigo = codigo;
     }
 
