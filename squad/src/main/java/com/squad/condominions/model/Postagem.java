@@ -2,18 +2,16 @@ package com.squad.condominions.model;
 
 import com.squad.condominions.enums.TipoTag;
 import jakarta.persistence.*;
-import jakarta.websocket.ClientEndpoint;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ocorrencias")
-public class Ocorrencia {
+@Table(name = "postagens")
+public class Postagem {
 
-    public Ocorrencia() { }
+    public Postagem() { }
 
-    public Ocorrencia(String urlImagem, String titulo, String descricao, TipoTag tag, Usuario usuario) {
+    public Postagem(String urlImagem, String titulo, String descricao, TipoTag tag, Usuario usuario) {
         this.urlImagem = urlImagem;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -24,7 +22,7 @@ public class Ocorrencia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_ocorrencia")
+    @Column(name = "id_postagem")
     private Long id;
 
     @Column(name = "url_imagem", nullable = true)
@@ -88,7 +86,7 @@ public class Ocorrencia {
         return usuario;
     }
 
-    public Ocorrencia(String urlImagem, String titulo, String descricao, int qtdeUpvotes, TipoTag tag, Usuario usuario) {
+    public Postagem(String urlImagem, String titulo, String descricao, int qtdeUpvotes, TipoTag tag, Usuario usuario) {
         this.urlImagem = urlImagem;
         this.titulo = titulo;
         this.descricao = descricao;
