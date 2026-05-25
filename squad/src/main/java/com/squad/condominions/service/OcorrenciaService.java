@@ -20,6 +20,7 @@ public class OcorrenciaService {
         this.repository = repository;
     }
 
+    @PostMapping
     public ResponseEntity<Ocorrencia> criar(Ocorrencia ocorrencia) {
         if(ocorrencia.getTag() == null) {
             ocorrencia.setTag(TipoTag.NULA);
@@ -57,7 +58,7 @@ public class OcorrenciaService {
         return ResponseEntity.status(HttpStatus.OK).body(achado);
     }
 
-
+    @GetMapping
     public ResponseEntity<List<Ocorrencia>> listar() {
         return ResponseEntity.ok(repository.findAll());
     }
