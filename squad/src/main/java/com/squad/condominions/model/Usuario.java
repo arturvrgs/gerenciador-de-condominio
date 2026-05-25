@@ -6,6 +6,15 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "usuarios")
 public class Usuario {
+
+    public Usuario(String nome, String sobrenome, TipoUsuario tipo) {
+        this.nome = nome;
+        this.sobrenome = sobrenome;
+        this.tipo = tipo;
+    }
+
+    public Usuario() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
