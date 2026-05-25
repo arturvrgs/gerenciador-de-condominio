@@ -29,6 +29,8 @@ public class UsuarioService {
 
         existente.setNome(usuario.getNome());
         existente.setSobrenome(usuario.getSobrenome());
+        existente.setTipo(usuario.getTipo());
+        repository.save(existente);
 
         return ResponseEntity.ok(existente);
     }
