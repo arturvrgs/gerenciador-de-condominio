@@ -4,6 +4,7 @@ import com.squad.condominions.model.Usuario;
 import com.squad.condominions.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class UsuarioService {
         this.repository = repository;
     }
 
+    @Transactional
     public ResponseEntity<?> criar(Usuario usuario) {
         if (usuario.getNome() == null || usuario.getSobrenome() == null || usuario.getTipo() == null) {
             return ResponseEntity.badRequest().body("Campos obrigatórios não preenchidos");
@@ -24,6 +26,7 @@ public class UsuarioService {
         return ResponseEntity.ok(usuarioSalvo);
     }
 
+    @Transactional
     public ResponseEntity<Usuario> atualizar(Long id, Usuario usuario){
         Usuario existente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrada!"));
@@ -36,6 +39,7 @@ public class UsuarioService {
         return ResponseEntity.ok(existente);
     }
 
+    @Transactional
     public ResponseEntity<Usuario> deletar(Long id){
         Usuario deletado = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
@@ -43,6 +47,7 @@ public class UsuarioService {
         return ResponseEntity.ok(deletado);
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<Usuario> acharPorId(Long id){
         Usuario existente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
@@ -50,8 +55,8 @@ public class UsuarioService {
         return ResponseEntity.ok(existente);
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Usuario>> listar() {
         return ResponseEntity.ok(repository.findAll());
     }
-
 }

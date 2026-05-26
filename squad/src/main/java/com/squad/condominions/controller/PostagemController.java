@@ -42,7 +42,7 @@ public class PostagemController {
         return service.listar();
     }
 
-    @GetMapping("/{tipoPost}")
+    @GetMapping("/tipo/{tipoPost}")
     public ResponseEntity<List<Postagem>> listarPorTipoPost(@PathVariable TipoPost tipoPost) {
         return service.listarPorTipoPost(tipoPost);
     }
