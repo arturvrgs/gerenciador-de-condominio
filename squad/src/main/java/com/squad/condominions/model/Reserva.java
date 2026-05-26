@@ -45,8 +45,8 @@ public class Reserva {
     public void setAreaComum(AreaComum areaComum) { this.areaComum = areaComum; }
 
     public LocalDateTime getDataInicio() { return dataInicio; }
-    public void setInicio(LocalDateTime inicio) { this.dataInicio = inicio; }
+    public void setDataInicio(LocalDateTime inicio) { this.dataInicio = inicio; }
 
     public LocalDateTime getDataFim() { return dataFim; }
-    public void setFim(LocalDateTime fim) { this.dataFim = fim; }
+    public void setDataFim(LocalDateTime fim) { this.dataFim = fim; }
 }
