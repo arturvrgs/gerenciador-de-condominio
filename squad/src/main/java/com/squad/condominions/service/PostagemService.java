@@ -4,12 +4,11 @@ import com.squad.condominions.enums.TipoPost;
 import com.squad.condominions.enums.TipoTag;
 import com.squad.condominions.enums.TipoUsuario;
 import com.squad.condominions.model.Postagem;
-import com.squad.condominions.model.Usuario;
 import com.squad.condominions.repository.PostagemRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,6 +20,7 @@ public class PostagemService {
         this.repository = repository;
     }
 
+    @Transactional
     public ResponseEntity<Postagem> criar(Postagem postagem) {
 
         if(verificarPermissaoPostagem(postagem)) {
@@ -35,6 +35,7 @@ public class PostagemService {
         return ResponseEntity.ok(postagemSalva);
     }
 
+    @Transactional
     public ResponseEntity<Postagem> atualizar(Long id, Postagem postagem) {
         Postagem existente = repository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Postagem não encontrada!")); // Criar erro de NOT FOUND
@@ -49,6 +50,7 @@ public class PostagemService {
         return ResponseEntity.ok(existente);
     }
 
+    @Transactional
     public ResponseEntity<Postagem> deletar(Long id) {
         Postagem deletada = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Postagem não encontrada!"));
@@ -57,6 +59,7 @@ public class PostagemService {
         return ResponseEntity.status(HttpStatus.OK).body(deletada);
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<Postagem> acharPorId(Long id) {
         Postagem achado = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Postagem não encontrada!"));
@@ -64,10 +67,12 @@ public class PostagemService {
         return ResponseEntity.status(HttpStatus.OK).body(achado);
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Postagem>> listarPorTipoPost(TipoPost tipoPost) {
         return ResponseEntity.ok(repository.findAllByTipoPost(tipoPost));
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Postagem>> listar() {
         return ResponseEntity.ok(repository.findAll());
     }

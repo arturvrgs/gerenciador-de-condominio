@@ -1,21 +1,17 @@
 package com.squad.condominions.controller;
 
 import com.squad.condominions.model.AreaComum;
-import com.squad.condominions.model.Usuario;
 import com.squad.condominions.service.AreaComumService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.awt.geom.Area;
 import java.util.List;
 
 @RestController
-@RequestMapping("condominions/usuarios")
+@RequestMapping("condominions/areas-comuns")
 public class AreaComumController {
     private final AreaComumService service;
 
-    private AreaComumController(AreaComumService service) {
+    public AreaComumController(AreaComumService service) {
         this.service = service;
     }
 

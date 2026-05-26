@@ -25,6 +25,8 @@ public class AreaComum {
         this.urlImagem = urlImagem;
     }
 
+    public AreaComum() {}
+
     public Long getId() {
         return id;
     }
