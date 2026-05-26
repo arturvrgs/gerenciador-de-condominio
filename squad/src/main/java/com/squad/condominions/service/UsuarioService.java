@@ -3,10 +3,11 @@ package com.squad.condominions.service;
 import com.squad.condominions.model.Usuario;
 import com.squad.condominions.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-
+@Service
 public class UsuarioService {
     private final UsuarioRepository repository;
 
