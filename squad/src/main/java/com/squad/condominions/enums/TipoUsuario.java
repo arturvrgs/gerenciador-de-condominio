@@ -1,16 +1,16 @@
 package com.squad.condominions.enums;
 
 public enum TipoUsuario {
-    MORADOR("M"),
-    ADMINISTRADOR("A");
+    MORADOR('M'),
+    ADMINISTRADOR('A');
 
-    private final String codigo;
+    private final Character codigo;
 
-    TipoUsuario(String codigo) {
+    TipoUsuario(Character codigo) {
         this.codigo = codigo;
     }
 
-    public String getCodigo() {
+    public Character getCodigo() {
         return codigo;
     }
 }

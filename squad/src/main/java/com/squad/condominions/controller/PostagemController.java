@@ -1,5 +1,6 @@
 package com.squad.condominions.controller;
 
+import com.squad.condominions.enums.TipoPost;
 import com.squad.condominions.model.Postagem;
 import com.squad.condominions.service.PostagemService;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class PostagemController {
     }
 
     @PostMapping
-    ResponseEntity<Postagem> criar(@RequestBody Postagem postagem) {
+    public ResponseEntity<Postagem> criar(@RequestBody Postagem postagem) {
         return service.criar(postagem);
     }
 
@@ -27,20 +28,24 @@ public class PostagemController {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<Postagem> deletar(@PathVariable Long id) {
+    public ResponseEntity<Postagem> deletar(@PathVariable Long id) {
         return service.deletar(id);
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Postagem> acharPorId(@PathVariable Long id) {
+    public ResponseEntity<Postagem> acharPorId(@PathVariable Long id) {
         return service.acharPorId(id);
     }
 
     @GetMapping
-    ResponseEntity<List<Postagem>> listar() {
+    public ResponseEntity<List<Postagem>> listar() {
         return service.listar();
     }
 
+    @GetMapping("/{tipoPost}")
+    public ResponseEntity<List<Postagem>> listarPorTipoPost(@PathVariable TipoPost tipoPost) {
+        return service.listarPorTipoPost(tipoPost);
+    }
 
 
 }

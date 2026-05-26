@@ -1,15 +1,13 @@
 package com.squad.condominions.enums;
 
-public enum TipoTag {
-    FIXADO('F'),
-    ELOGIO('E'),
-    RECLAMACAO('R'),
-    ALERTA('A'),
-    NULA('N');
+public enum EstadoAreaComum {
+    DISPONIVEL('D'),
+    RESERVADA('R'),
+    SUSPENSA('S');
 
     private final Character codigo;
 
-    TipoTag(Character codigo) {
+    EstadoAreaComum(Character codigo) {
         this.codigo = codigo;
     }
 

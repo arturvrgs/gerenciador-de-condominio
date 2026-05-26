@@ -1,5 +1,6 @@
 package com.squad.condominions.model;
 
+import com.squad.condominions.enums.TipoPost;
 import com.squad.condominions.enums.TipoTag;
 import jakarta.persistence.*;
 
@@ -40,8 +41,11 @@ public class Postagem {
     @Column(name = "tag", nullable = true)
     private TipoTag tag;
 
-    @Column(name = "publicada_em", insertable = false, updatable = false)
+    @Column(name = "data_publicacao", insertable = false, updatable = false)
     private LocalDateTime dataPublicacao;
+
+    @Column(name = "tipo_post", insertable = true, updatable = false, nullable = false)
+    private TipoPost tipoPost;
 
     @Column(name = "ult_atualizacao", insertable = false, updatable = false)
     private LocalDateTime ultAtualizacao;
@@ -74,7 +78,7 @@ public class Postagem {
         return tag;
     }
 
-    public String getTagString() {
+    public Character getTagString() {
         return tag.getCodigo();
     }
 
@@ -117,5 +121,17 @@ public class Postagem {
 
     public LocalDateTime getUltAtualizacao() {
         return ultAtualizacao;
+    }
+
+    public Character getTipoUsuarioPostagem() {
+        return usuario.getTipo().getCodigo();
+    }
+
+    public TipoPost getTipoPost() {
+        return tipoPost;
+    }
+
+    public void setTipoPost(TipoPost tipoPost) {
+        this.tipoPost = tipoPost;
     }
 }
