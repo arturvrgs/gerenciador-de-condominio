@@ -14,7 +14,7 @@ import java.util.List;
 public class ReservaController {
     private final ReservaService service;
 
-    private ReservaController(ReservaService service) {
+    public ReservaController(ReservaService service) {
         this.service = service;
     }
 
@@ -24,7 +24,7 @@ public class ReservaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Reserva> atualizar(@PathVariable Long id, @RequestBody Reserva reserva){
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Reserva reserva){
         return service.atualizar(id, reserva);
     }
 

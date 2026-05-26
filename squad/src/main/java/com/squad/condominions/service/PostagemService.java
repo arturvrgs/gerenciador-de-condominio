@@ -23,7 +23,7 @@ public class PostagemService {
     @Transactional
     public ResponseEntity<Postagem> criar(Postagem postagem) {
 
-        if(verificarPermissaoPostagem(postagem)) {
+        if(!ehPermitidoPostar(postagem)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(postagem);
         }
 
@@ -38,7 +38,7 @@ public class PostagemService {
     @Transactional
     public ResponseEntity<Postagem> atualizar(Long id, Postagem postagem) {
         Postagem existente = repository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Postagem não encontrada!")); // Criar erro de NOT FOUND
+                    .orElseThrow(() -> new RuntimeException("Postagem não encontrada!"));
 
         existente.setTitulo(postagem.getTitulo());
         existente.setDescricao(postagem.getDescricao());
@@ -77,9 +77,10 @@ public class PostagemService {
         return ResponseEntity.ok(repository.findAll());
     }
 
-    private boolean verificarPermissaoPostagem(Postagem postagem) {
-        return postagem.getTipoUsuarioPostagem() == TipoUsuario.MORADOR.getCodigo()
-                && postagem.getTipoPost().getCodigo() == TipoPost.FORUM.getCodigo();
+    private boolean ehPermitidoPostar(Postagem postagem) {
+        boolean ehMorador = postagem.getTipoUsuarioPostagem() == TipoUsuario.MORADOR.getCodigo();
+        boolean ehForum = postagem.getTipoPost().getCodigo() == TipoPost.FORUM.getCodigo();
+        return !(ehMorador && ehForum);
     }
 
 }

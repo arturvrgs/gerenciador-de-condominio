@@ -12,7 +12,7 @@ import java.util.List;
 public class UsuarioController {
     private final UsuarioService service;
 
-    private UsuarioController(UsuarioService service) {
+    public UsuarioController(UsuarioService service) {
         this.service = service;
     }
 

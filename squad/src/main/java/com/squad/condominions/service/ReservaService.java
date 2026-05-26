@@ -41,6 +41,11 @@ public class ReservaService {
             return ResponseEntity.badRequest().body(erroValidacao.get());
         }
 
+        existente.setAreaComum(reserva.getAreaComum());
+        existente.setUsuario(reserva.getUsuario());
+        existente.setDataInicio(reserva.getDataInicio());
+        existente.setDataFim(reserva.getDataFim());
+
         repository.save(existente);
         return ResponseEntity.ok(existente);
     }
