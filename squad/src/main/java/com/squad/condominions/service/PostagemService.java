@@ -4,13 +4,11 @@ import com.squad.condominions.enums.TipoPost;
 import com.squad.condominions.enums.TipoTag;
 import com.squad.condominions.enums.TipoUsuario;
 import com.squad.condominions.model.Postagem;
-import com.squad.condominions.model.Usuario;
 import com.squad.condominions.repository.PostagemRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
