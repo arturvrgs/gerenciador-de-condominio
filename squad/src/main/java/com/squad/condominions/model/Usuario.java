@@ -26,6 +26,7 @@ public class Usuario {
     private String sobrenome;
 
     @Column(name = "tipo", nullable = false)
+    @Enumerated(EnumType.STRING)
     private TipoUsuario tipo;
 
     public Long getId() {
