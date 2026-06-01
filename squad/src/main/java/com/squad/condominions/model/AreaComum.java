@@ -14,6 +14,7 @@ public class AreaComum {
     private String nome;
 
     @Column(name = "estado", nullable = false)
+    @Enumerated(EnumType.STRING)
     private EstadoAreaComum estado;
 
     @Column(name = "url_imagem", nullable = true)
