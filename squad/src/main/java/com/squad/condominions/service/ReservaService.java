@@ -51,11 +51,9 @@ public class ReservaService {
     }
 
     @Transactional
-    public ResponseEntity<Reserva> deletar(Long id){
-        Reserva deletado = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada!"));
-        repository.delete(deletado);
-        return ResponseEntity.ok(deletado);
+    public void deletarReservasPorAreaComumId(Long id) {
+        List<Reserva> reservas = repository.findAllByAreaComum_Id(id);
+        repository.deleteAll(reservas);
     }
 
     @Transactional(readOnly = true)
