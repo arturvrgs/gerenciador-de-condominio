@@ -27,6 +27,10 @@ public class PostagemService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(postagem);
         }
 
+        if(!validarCamposObrigatorios(postagem)) {
+            return ResponseEntity.badRequest().body(postagem);
+        }
+
         if(postagem.getTag() == null) {
             postagem.setTag(TipoTag.NULA);
         }
@@ -83,4 +87,10 @@ public class PostagemService {
         return !(ehMorador && ehForum);
     }
 
+    private boolean validarCamposObrigatorios(Postagem postagem) {
+        return postagem.getTitulo() != null && !postagem.getTitulo().isBlank()
+                && postagem.getDescricao() != null && !postagem.getDescricao().isBlank()
+                && postagem.getTipoPost() != null
+                && postagem.getUsuario() != null;
+    }
 }

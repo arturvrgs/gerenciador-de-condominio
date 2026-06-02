@@ -18,7 +18,7 @@ public class UsuarioService {
 
     @Transactional
     public ResponseEntity<?> criar(Usuario usuario) {
-        if (usuario.getNome() == null || usuario.getSobrenome() == null || usuario.getTipo() == null) {
+        if (validarCamposObrigatorios(usuario)) {
             return ResponseEntity.badRequest().body("Campos obrigatórios não preenchidos");
         }
 
@@ -58,5 +58,13 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public ResponseEntity<List<Usuario>> listar() {
         return ResponseEntity.ok(repository.findAll());
+    }
+
+    private boolean validarCamposObrigatorios(Usuario usuario) {
+        return usuario.getNome() != null &&
+                usuario.getSobrenome() != null &&
+                 usuario.getTipo() != null &&
+                  !usuario.getNome().isBlank() &&
+                   !usuario.getSobrenome().isBlank();
     }
 }

@@ -11,14 +11,16 @@ import java.util.List;
 @Service
 public class AreaComumService {
     private final AreaComumRepository repository;
+    private final ReservaService reservaService;
 
-    public AreaComumService(AreaComumRepository repository) {
+    public AreaComumService(AreaComumRepository repository, ReservaService reservaService) {
         this.repository = repository;
+        this.reservaService = reservaService;
     }
 
     @Transactional
     public ResponseEntity<?> criar(AreaComum areaComum) {
-        if (areaComum.getNome() == null || areaComum.getEstado() == null) {
+        if (!validarCamposObrigatorios(areaComum)) {
             return ResponseEntity.badRequest().body("Campos obrigatórios não preenchidos");
         }
 
@@ -44,6 +46,10 @@ public class AreaComumService {
     public ResponseEntity<AreaComum> deletar(Long id){
         AreaComum deletado = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Área comum não encontrada!"));
+
+        reservaService.deletarReservasPorAreaComumId(id);
+
+
         repository.delete(deletado);
         return ResponseEntity.ok(deletado);
     }
@@ -61,4 +67,9 @@ public class AreaComumService {
         return ResponseEntity.ok(repository.findAll());
     }
 
+    private boolean validarCamposObrigatorios(AreaComum areaComum) {
+        return areaComum.getNome() != null &&
+                areaComum.getEstado() != null &&
+                 !areaComum.getNome().isEmpty();
+    }
 }
