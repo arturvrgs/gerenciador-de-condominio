@@ -49,7 +49,6 @@ public class AreaComumService {
 
         reservaService.deletarReservasPorAreaComumId(id);
 
-
         repository.delete(deletado);
         return ResponseEntity.ok(deletado);
     }
