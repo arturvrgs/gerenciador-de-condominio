@@ -18,7 +18,7 @@ public class UsuarioService {
 
     @Transactional
     public ResponseEntity<?> criar(Usuario usuario) {
-        if (validarCamposObrigatorios(usuario)) {
+        if (!validarCamposObrigatorios(usuario)) {
             return ResponseEntity.badRequest().body("Campos obrigatórios não preenchidos");
         }
 
