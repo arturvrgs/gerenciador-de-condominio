@@ -7,7 +7,7 @@ export class CardPostagemForum {
 
   render() {
     return `
-      <div class="card-post">
+      <div class="card-post" data-id="${this.postagem.id}">
         <div style="display:flex;gap:10px;">
           <div class="avatar-post avatar-laranja">
             ${this.postagem.usuario.nome.charAt(0).toUpperCase()}

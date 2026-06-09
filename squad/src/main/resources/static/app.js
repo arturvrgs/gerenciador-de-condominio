@@ -5,6 +5,7 @@ import { postagemApi } from './api/postagem.js';
 // ESTADO DO USUÁRIO ATUAL
 // ═══════════════════════════════════════════════
 let usuarioAtual = {
+  id: 1,
   nome: 'Artur Vargas',
   perfil: 'sindico', /* 'sindico' ou 'morador' */
   iniciais: 'A'
@@ -36,7 +37,7 @@ function realizarLogin() {
 
 function entrarComo(perfil) {
   if (perfil === 'sindico') {
-    usuarioAtual = { nome: 'Artur Vargas', perfil: 'sindico', iniciais: 'A' };
+    usuarioAtual = { nome: 'Artur Vargas', perfil: 'sindico', iniciais: 'A', id: 1 };
   } else {
     usuarioAtual = { nome: 'Gabriel Lacerda', perfil: 'morador', iniciais: 'G' };
   }
@@ -231,10 +232,21 @@ function alternarVoto(botao) {
 // ═══════════════════════════════════════════════
 // EXCLUIR POST
 // ═══════════════════════════════════════════════
-function excluirPost(botao) {
+async function excluirPost(botao) {
   if (!confirm('Excluir esta publicação?')) return;
-  botao.closest('.card-post').remove();
-  mostrarToast('Publicação excluída');
+
+  const card = botao.closest('.card-post');
+  const id = card.dataset.id;
+
+  try {
+    await postagemApi.deletar(id);
+    card.remove();
+    await listarPostagensForum();
+    mostrarToast('Publicação excluída');
+  } catch (erro) {
+    console.error(erro);
+    mostrarToast('Erro ao excluir publicação');
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -254,28 +266,40 @@ function editarPost(botao, tipo) {
   abrirModal(tipo === 'forum' ? 'modal-novo-aviso' : 'modal-nova-ocorrencia');
 }
 
-// ═══════════════════════════════════════════════
-// ENVIAR AVISO NO FÓRUM
-// ═══════════════════════════════════════════════
-function handleNovoAviso(event) {
+function handleNovaPostagemForum(event) {
   event.preventDefault();
   const form = event.target;
-  
-  const titulo     = form.titulo.value.trim();
-  const descricao  = form.descricao.value.trim();
-  const prioridade = form.prioridade.value;       // "normal" | "urgente"
-  const foto       = form.foto.files[0] ?? null;  // File | null
 
-  enviarAviso(titulo, descricao, prioridade, foto);
+  const novaPostagem = {
+    titulo:     form.titulo.value.trim(),
+    descricao:  form.descricao.value.trim(),
+    tag:        form.tag.value,
+    urlImagem:  null,    
+    tipoPost:   'FORUM',
+    usuario:    { id: usuarioAtual.id }
+  };
+
+  if (!novaPostagem.titulo || !novaPostagem.descricao) {
+    mostrarToast('Preencha todos os campos obrigatórios');
+    return;
+  }
+
+  criarPostagem(novaPostagem);
 }
 
 // ═══════════════════════════════════════════════
-// ENVIAR AVISO NO FÓRUM
+// CRIAR PUBLICAÇÃO NO FÓRUM
 // ═══════════════════════════════════════════════
-function enviarAviso(titulo, descricao, prioridade, foto) {
-  fecharModal('modal-novo-aviso');
-  console.log(titulo, descricao, prioridade, foto);
-  mostrarToast('Aviso publicado com sucesso');
+async function criarPostagem(novaPostagem) {
+  try {
+    await postagemApi.criar(novaPostagem);
+    fecharModal('modal-novo-aviso');
+    mostrarToast('Postagem publicada com sucesso');
+    await listarPostagensForum();
+  } catch (erro) {
+    console.error(erro);
+    mostrarToast('Erro ao publicar postagem');
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -415,6 +439,18 @@ async function listarPostagensForum() {
         const card = new CardPostagemForum(postagem);
         container.innerHTML += card.render();
       });
+   } else {
+    container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:4rem;">
+        <svg width="36" height="36" fill="none" stroke="var(--texto-suave)" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <path d="M8 9h8"/>
+          <path d="M8 13h5"/>
+        </svg>
+
+        <p style="font-size:14px;font-weight:500;color:var(--texto-secundario);margin:0;">
+          Não há postagens para mostrar.
+        </p>
+      </div>`
    }
    
 }
@@ -436,8 +472,8 @@ Object.assign(window, {
   excluirPost,
   alternarPin,
   editarPost,
-  enviarAviso,
-  handleNovoAviso,
+  criarPostagem,
+  handleNovaPostagemForum,
   enviarOcorrencia,
   filtrarEtiqueta,
   suspenderArea,
