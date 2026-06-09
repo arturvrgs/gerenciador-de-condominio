@@ -1,7 +1,11 @@
 package com.squad.condominions.service;
 
+import com.squad.condominions.model.AreaComum;
 import com.squad.condominions.model.Reserva;
+import com.squad.condominions.model.Usuario;
+import com.squad.condominions.repository.AreaComumRepository;
 import com.squad.condominions.repository.ReservaRepository;
+import com.squad.condominions.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,52 +18,65 @@ import java.util.Optional;
 @Service
 public class ReservaService {
     private final ReservaRepository repository;
+    private final UsuarioRepository usuarioRepository;
+    private final AreaComumRepository areaComumRepository;
 
-    public ReservaService(ReservaRepository repository) {
+    public ReservaService(ReservaRepository repository,
+                          UsuarioRepository usuarioRepository,
+                          AreaComumRepository areaComumRepository) {
         this.repository = repository;
+        this.usuarioRepository = usuarioRepository;
+        this.areaComumRepository = areaComumRepository;
     }
 
     @Transactional
     public ResponseEntity<?> criar(Reserva reserva) {
+        reserva.setUsuario(buscarUsuario(reserva.getUsuario().getId()));
+        reserva.setAreaComum(buscarAreaComum(reserva.getAreaComum().getId()));
 
         Optional<String> erroValidacao = validarDatasReserva(reserva);
-        if(erroValidacao.isPresent()) {
+        if (erroValidacao.isPresent()) {
             return ResponseEntity.badRequest().body(erroValidacao.get());
         }
 
-        Reserva reservaSalva = repository.save(reserva);
-        return ResponseEntity.ok(reservaSalva);
+        return ResponseEntity.ok(repository.save(reserva));
     }
 
     @Transactional
-    public ResponseEntity<?> atualizar(Long id, Reserva reserva){
+    public ResponseEntity<?> atualizar(Long id, Reserva reserva) {
         Reserva existente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada!"));
 
         Optional<String> erroValidacao = validarDatasReserva(reserva);
-        if(erroValidacao.isPresent()) {
+        if (erroValidacao.isPresent()) {
             return ResponseEntity.badRequest().body(erroValidacao.get());
         }
 
-        existente.setAreaComum(reserva.getAreaComum());
-        existente.setUsuario(reserva.getUsuario());
+        existente.setUsuario(buscarUsuario(reserva.getUsuario().getId()));
+        existente.setAreaComum(buscarAreaComum(reserva.getAreaComum().getId()));
         existente.setDataInicio(reserva.getDataInicio());
         existente.setDataFim(reserva.getDataFim());
 
-        repository.save(existente);
-        return ResponseEntity.ok(existente);
+        return ResponseEntity.ok(repository.save(existente));
     }
 
     @Transactional
-    public ResponseEntity<Reserva> deletar(Long id){
-        Reserva deletado = repository.findById(id)
+    public void deletarReservasPorAreaComumId(Long id) {
+        List<Reserva> reservas = repository.findAllByAreaComum_Id(id);
+        repository.deleteAll(reservas);
+    }
+
+    @Transactional
+    public ResponseEntity<Reserva> deletar(Long id) {
+        Reserva deletada = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada!"));
-        repository.delete(deletado);
-        return ResponseEntity.ok(deletado);
+
+        repository.delete(deletada);
+        return ResponseEntity.ok(deletada);
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<Reserva> acharPorId(Long id){
+    public ResponseEntity<Reserva> acharPorId(Long id) {
         Reserva existente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada!"));
 
@@ -69,6 +86,16 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public ResponseEntity<List<Reserva>> listar() {
         return ResponseEntity.ok(repository.findAll());
+    }
+
+    private Usuario buscarUsuario(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+    }
+
+    private AreaComum buscarAreaComum(Long id) {
+        return areaComumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Área comum não encontrada!"));
     }
 
     private Optional<String> validarDatasReserva(Reserva reserva) {

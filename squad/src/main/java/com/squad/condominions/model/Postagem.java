@@ -3,6 +3,8 @@ package com.squad.condominions.model;
 import com.squad.condominions.enums.TipoPost;
 import com.squad.condominions.enums.TipoTag;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -42,14 +44,16 @@ public class Postagem {
     @Enumerated(EnumType.STRING)
     private TipoTag tag;
 
-    @Column(name = "data_publicacao", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "data_publicacao", updatable = false)
     private LocalDateTime dataPublicacao;
 
     @Column(name = "tipo_post", insertable = true, updatable = false, nullable = false)
     @Enumerated(EnumType.STRING)
     private TipoPost tipoPost;
 
-    @Column(name = "ult_atualizacao", insertable = false, updatable = false)
+    @UpdateTimestamp
+    @Column(name = "ult_atualizacao", updatable = true)
     private LocalDateTime ultAtualizacao;
 
     @ManyToOne

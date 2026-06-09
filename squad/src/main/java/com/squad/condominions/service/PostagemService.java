@@ -4,7 +4,9 @@ import com.squad.condominions.enums.TipoPost;
 import com.squad.condominions.enums.TipoTag;
 import com.squad.condominions.enums.TipoUsuario;
 import com.squad.condominions.model.Postagem;
+import com.squad.condominions.model.Usuario;
 import com.squad.condominions.repository.PostagemRepository;
+import com.squad.condominions.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,15 +18,28 @@ import java.util.List;
 public class PostagemService {
     private final PostagemRepository repository;
 
-    public PostagemService(PostagemRepository repository) {
+    private final UsuarioRepository usuarioRepository;
+
+    public PostagemService(
+            PostagemRepository repository,
+            UsuarioRepository usuarioRepository) {
         this.repository = repository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional
     public ResponseEntity<Postagem> criar(Postagem postagem) {
 
+        Long usuarioId = postagem.getUsuario().getId();
+
+        postagem.setUsuario(buscarUsuario(usuarioId));
+
         if(!ehPermitidoPostar(postagem)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(postagem);
+        }
+
+        if(!validarCamposObrigatorios(postagem)) {
+            return ResponseEntity.badRequest().body(postagem);
         }
 
         if(postagem.getTag() == null) {
@@ -83,4 +98,15 @@ public class PostagemService {
         return !(ehMorador && ehForum);
     }
 
+    private boolean validarCamposObrigatorios(Postagem postagem) {
+        return postagem.getTitulo() != null && !postagem.getTitulo().isBlank()
+                && postagem.getDescricao() != null && !postagem.getDescricao().isBlank()
+                && postagem.getTipoPost() != null
+                && postagem.getUsuario() != null;
+    }
+
+    private Usuario buscarUsuario(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+    }
 }

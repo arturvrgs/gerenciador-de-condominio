@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Viewport mobile-first -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Condominions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="styles.css" />
+
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     TELA: LOGIN
+══════════════════════════════════════════════════ -->
+<div id="tela-login" class="tela ativa">
+  <div class="card-login">
+    <div class="marca-logo">C</div>
+    <h1 style="font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:4px;">Condominions</h1>
+    <p style="font-size:14px;color:var(--texto-suave);margin-bottom:1.75rem;">Acesse o sistema do seu condomínio</p>
+
+    <!-- Campo CPF -->
+    <div style="margin-bottom:1rem;">
+      <label class="rotulo-campo">CPF</label>
+      <input id="campo-cpf" class="campo-input" type="tel" inputmode="numeric"
+             placeholder="000.000.000-00" maxlength="14"
+             oninput="aplicarMascaraCPF(this)" />
+      <p class="dica-cpf">Somente números</p>
+    </div>
+
+    <!-- Campo Senha -->
+    <div style="margin-bottom:0.5rem;">
+      <label class="rotulo-campo">Senha</label>
+      <input id="campo-senha" class="campo-input" type="password" placeholder="••••••••" />
+    </div>
+
+    <!-- Link esqueci senha -->
+    <div style="text-align:right;margin-bottom:1.5rem;">
+      <button onclick="abrirModalEsqueciSenha()"
+              style="background:none;border:none;font-size:14px;color:var(--laranja-principal);
+                     cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;
+                     min-height:44px;padding:0.5rem 0;">
+        Esqueci a senha
+      </button>
+    </div>
+
+    <!-- Botão entrar -->
+    <button class="btn-primario" style="width:100%;" onclick="realizarLogin()">
+      Entrar
+    </button>
+
+    <!-- Atalhos de demonstração -->
+    <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--borda);">
+      <p style="font-size:12px;color:var(--texto-suave);text-align:center;margin-bottom:0.75rem;">
+        Entrar como (demonstração)
+      </p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secundario" style="flex:1;font-size:14px;" onclick="entrarComo('sindico')">
+          Síndico
+        </button>
+        <button class="btn-secundario" style="flex:1;font-size:14px;" onclick="entrarComo('morador')">
+          Morador
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TELA: APP
+══════════════════════════════════════════════════ -->
+<div id="tela-app" class="tela">
+
+  <!-- Sidebar — visível apenas no desktop via CSS -->
+  <aside class="sidebar-desktop" style="display:none;">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 0.5rem;margin-bottom:2rem;">
+      <div style="width:36px;height:36px;background:var(--laranja-principal);border-radius:10px;
+                  display:flex;align-items:center;justify-content:center;color:white;
+                  font-size:15px;font-weight:700;flex-shrink:0;">C</div>
+      <span style="font-size:16px;font-weight:600;letter-spacing:-0.3px;">Condominions</span>
+    </div>
+
+    <nav style="flex:1;">
+      <!-- Itens de navegação sidebar desktop -->
+      <button class="item-nav-sidebar ativo" onclick="mostrarPagina('forum')" id="sidebar-forum"
+              style="display:flex;align-items:center;gap:10px;padding:0.6rem 0.75rem;border-radius:10px;
+                     cursor:pointer;font-size:14px;font-weight:500;color:var(--laranja-principal);
+                     background:var(--laranja-palido);border:none;width:100%;margin-bottom:2px;text-align:left;
+                     font-family:'DM Sans',sans-serif;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Fórum
+      </button>
+      <button class="item-nav-sidebar" onclick="mostrarPagina('ocorrencias')" id="sidebar-ocorrencias"
+              style="display:flex;align-items:center;gap:10px;padding:0.6rem 0.75rem;border-radius:10px;
+                     cursor:pointer;font-size:14px;font-weight:500;color:var(--texto-secundario);
+                     background:none;border:none;width:100%;margin-bottom:2px;text-align:left;
+                     font-family:'DM Sans',sans-serif;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Ocorrências
+      </button>
+      <button class="item-nav-sidebar" onclick="mostrarPagina('wiki')" id="sidebar-wiki"
+              style="display:flex;align-items:center;gap:10px;padding:0.6rem 0.75rem;border-radius:10px;
+                     cursor:pointer;font-size:14px;font-weight:500;color:var(--texto-secundario);
+                     background:none;border:none;width:100%;margin-bottom:2px;text-align:left;
+                     font-family:'DM Sans',sans-serif;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Wiki
+      </button>
+      <button class="item-nav-sidebar" onclick="mostrarPagina('areas')" id="sidebar-areas"
+              style="display:flex;align-items:center;gap:10px;padding:0.6rem 0.75rem;border-radius:10px;
+                     cursor:pointer;font-size:14px;font-weight:500;color:var(--texto-secundario);
+                     background:none;border:none;width:100%;margin-bottom:2px;text-align:left;
+                     font-family:'DM Sans',sans-serif;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Áreas Comuns
+      </button>
+    </nav>
+
+    <!-- Perfil na sidebar desktop -->
+    <div style="padding:0.75rem;border-radius:12px;background:var(--fundo);border:1px solid var(--borda);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div class="avatar-post avatar-laranja" id="avatar-sidebar" style="width:32px;height:32px;font-size:12px;">A</div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+             id="nome-sidebar">Artur Vargas</p>
+          <span class="badge-sindico" id="badge-sidebar">SÍNDICO</span>
+        </div>
+      </div>
+      <button class="btn-fantasma" style="width:100%;justify-content:center;font-size:12px;" onclick="realizarLogout()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── PÁGINA: FÓRUM ─────────────────────────────── -->
+  <div id="pagina-forum" class="conteudo-principal ativo">
+    <div class="barra-topo">
+      <div>
+        <p class="titulo-pagina">Fórum</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <!-- Botão de ação visível no desktop -->
+        <button class="btn-primario btn-acao-topo" id="btn-novo-aviso"
+                style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
+                onclick="abrirModal('modal-novo-aviso')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo aviso
+        </button>
+        <div class="avatar-topo" onclick="abrirDrawerPerfil()">
+          <span id="avatar-topo-forum">A</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de posts -->
+    <div style="flex:1;" id="lista-forum">
+    </div>
+
+    <!-- FAB — apenas mobile e apenas síndico -->
+    <button class="btn-flutuante" id="fab-forum" onclick="abrirModal('modal-novo-aviso')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── PÁGINA: OCORRÊNCIAS ─────────────────────────── -->
+  <div id="pagina-ocorrencias" class="conteudo-principal">
+    <div class="barra-topo">
+      <div>
+        <p class="titulo-pagina">Ocorrências</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn-primario btn-acao-topo"
+                style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
+                onclick="abrirModal('modal-nova-ocorrencia')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova
+        </button>
+        <div class="avatar-topo" onclick="abrirDrawerPerfil()">
+          <span id="avatar-topo-ocorrencias">A</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros de etiqueta -->
+    <div style="display:flex;gap:8px;padding:0.875rem var(--padding-pagina);overflow-x:auto;
+                border-bottom:1px solid var(--borda);-webkit-overflow-scrolling:touch;">
+      <button class="etiqueta" style="padding:7px 16px;cursor:pointer;border:1.5px solid var(--laranja-principal);
+              background:var(--laranja-palido);color:var(--laranja-principal);white-space:nowrap;min-height:36px;"
+              onclick="filtrarEtiqueta(this,'todas')">Todas</button>
+      <button class="etiqueta etiqueta-reclamacao" style="padding:7px 16px;cursor:pointer;
+              border:1.5px solid transparent;white-space:nowrap;min-height:36px;"
+              onclick="filtrarEtiqueta(this,'reclamacao')">Reclamações</button>
+      <button class="etiqueta etiqueta-elogio" style="padding:7px 16px;cursor:pointer;
+              border:1.5px solid transparent;white-space:nowrap;min-height:36px;"
+              onclick="filtrarEtiqueta(this,'elogio')">Elogios</button>
+    </div>
+
+    <!-- Posts de ocorrências -->
+    <div style="flex:1;" id="lista-ocorrencias">
+
+      <!-- Post próprio do usuário logado -->
+      <div class="card-post" data-etiqueta="reclamacao" data-proprio="true">
+        <div style="display:flex;gap:10px;">
+          <div class="avatar-post avatar-azul">G</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+              <span style="font-size:14px;font-weight:600;">Gabriel Lacerda</span>
+              <span class="badge-morador">Morador</span>
+              <span class="etiqueta etiqueta-reclamacao">Reclamação</span>
+            </div>
+            <p style="font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.35;">
+              Barulho excessivo no bloco B
+            </p>
+            <p style="font-size:14px;color:var(--texto-secundario);line-height:1.55;">
+              Nos últimos três finais de semana, há som alto após as 22h no apartamento 304.
+              Peço providências.
+            </p>
+            <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button class="btn-voto ativo" onclick="alternarVoto(this)">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/>
+                  <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                </svg>
+                <span>12</span>
+              </button>
+              <span style="font-size:12px;color:var(--texto-suave);">3 de jun. · 22:40</span>
+              <!-- Ações disponíveis para o próprio autor -->
+              <div class="acoes-proprio" style="display:flex;gap:4px;margin-left:auto;">
+                <button class="btn-fantasma" style="font-size:12px;padding:0.35rem 0.5rem;"
+                        onclick="editarPost(this,'ocorrencia')">Editar</button>
+                <button class="btn-perigo" style="font-size:12px;"
+                        onclick="excluirPost(this)">Excluir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post de outro morador — sem ações de edição -->
+      <div class="card-post" data-etiqueta="elogio" data-proprio="false">
+        <div style="display:flex;gap:10px;">
+          <div class="avatar-post avatar-verde">M</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+              <span style="font-size:14px;font-weight:600;">Maria Souza</span>
+              <span class="badge-morador">Morador</span>
+              <span class="etiqueta etiqueta-elogio">Elogio</span>
+            </div>
+            <p style="font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.35;">
+              Jardim reformado ficou incrível!
+            </p>
+            <p style="font-size:14px;color:var(--texto-secundario);line-height:1.55;">
+              Parabéns ao síndico pela iniciativa de reformar a área verde. Ficou muito bonito.
+            </p>
+            <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+              <button class="btn-voto" onclick="alternarVoto(this)">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/>
+                  <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                </svg>
+                <span>27</span>
+              </button>
+              <span style="font-size:12px;color:var(--texto-suave);">1 de jun. · 11:20</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FAB nova ocorrência -->
+    <button class="btn-flutuante" id="fab-ocorrencias" onclick="abrirModal('modal-nova-ocorrencia')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── PÁGINA: WIKI ─────────────────────────────── -->
+  <div id="pagina-wiki" class="conteudo-principal">
+    <div class="barra-topo">
+      <p class="titulo-pagina">Wiki</p>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <!-- Editar wiki — somente síndico, visível no desktop -->
+        <button class="btn-primario btn-acao-topo" id="btn-editar-wiki"
+                style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
+                onclick="abrirModal('modal-editar-wiki')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Editar
+        </button>
+        <div class="avatar-topo" onclick="abrirDrawerPerfil()">
+          <span id="avatar-topo-wiki">A</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="area-conteudo">
+      <!-- Cabeçalho da wiki -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;
+                  padding-bottom:1.25rem;border-bottom:1px solid var(--borda);">
+        <div style="width:48px;height:48px;border-radius:14px;background:var(--laranja-palido);
+                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="20" height="20" fill="none" stroke="var(--laranja-principal)" stroke-width="1.75" viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <div>
+          <h1 style="font-size:19px;font-weight:700;letter-spacing:-0.4px;">Residencial Palmeiras</h1>
+          <p style="font-size:12px;color:var(--texto-suave);">Última atualização: 28 de maio de 2026</p>
+        </div>
+      </div>
+
+      <!-- Botão editar wiki mobile — síndico -->
+      <button class="btn-secundario" id="btn-editar-wiki-mobile" style="width:100%;margin-bottom:1.25rem;"
+              onclick="abrirModal('modal-editar-wiki')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Editar Wiki
+      </button>
+
+      <!-- Conteúdo da wiki -->
+      <div class="corpo-wiki" id="conteudo-wiki">
+        <h2>Sobre o condomínio</h2>
+        <p>O Residencial Palmeiras é um condomínio residencial fundado em 2010, com 4 blocos e 120 unidades. Localizado na Rua das Acácias, 450, Itajaí — SC.</p>
+
+        <h2>Contatos importantes</h2>
+        <ul>
+          <li>Síndico: Artur Vargas — (47) 99999-0001</li>
+          <li>Portaria: (47) 3344-5566</li>
+          <li>Manutenção emergencial: (47) 99888-1122</li>
+        </ul>
+
+        <h2>Horários de funcionamento</h2>
+        <ul>
+          <li>Portaria: 24 horas</li>
+          <li>Salão de festas: 08h às 23h</li>
+          <li>Piscina: 07h às 22h</li>
+          <li>Academia: 06h às 23h</li>
+        </ul>
+
+        <h2>Regulamento interno</h2>
+        <p>Silêncio das 22h às 08h. Animais na guia nas áreas comuns. Crianças menores de 12 anos precisam de acompanhante adulto na piscina.</p>
+
+        <h2>Coleta de lixo</h2>
+        <p>Orgânico: segunda, quarta e sexta. Reciclável: terça e quinta. Volumes grandes devem ser agendados com a administração.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PÁGINA: ÁREAS COMUNS ─────────────────────── -->
+  <div id="pagina-areas" class="conteudo-principal">
+    <div class="barra-topo">
+      <p class="titulo-pagina">Áreas Comuns</p>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn-primario btn-acao-topo" id="btn-nova-area"
+                style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
+                onclick="abrirModal('modal-nova-area')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova área
+        </button>
+        <div class="avatar-topo" onclick="abrirDrawerPerfil()">
+          <span id="avatar-topo-areas">A</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="area-conteudo">
+
+      <!-- Abas -->
+      <div class="barra-abas">
+        <button class="btn-aba ativo" onclick="trocarAba(this,'aba-lista')">Áreas</button>
+        <button class="btn-aba" onclick="trocarAba(this,'aba-reservas')">Reservas da semana</button>
+      </div>
+
+      <!-- Aba: lista de áreas -->
+      <div id="aba-lista">
+
+        <!-- Botão nova área — mobile síndico -->
+        <button class="btn-primario" id="btn-nova-area-mobile" style="width:100%;margin-bottom:1rem;"
+                onclick="abrirModal('modal-nova-area')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova área comum
+        </button>
+
+        <!-- Card de área — ativa -->
+        <div class="card-area" id="area-salao">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="indicador-status status-verde"></div>
+              <span style="font-size:16px;font-weight:600;">Salão de Festas</span>
+            </div>
+            <span style="font-size:11px;color:var(--verde);font-weight:500;background:#F0FDF4;
+                         padding:3px 9px;border-radius:20px;">Ativa</span>
+          </div>
+          <p style="font-size:13px;color:var(--texto-secundario);line-height:1.5;margin-bottom:12px;">
+            Capacidade para 80 pessoas. Das 08h às 23h. Cozinha equipada e sistema de som.
+          </p>
+          <!-- Ações — scroll horizontal no mobile se necessário -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn-primario" style="font-size:13px;min-height:40px;padding:0.5rem 1rem;flex:1;"
+                    onclick="abrirModal('modal-reservar');definirAreaReserva('Salão de Festas')">
+              Reservar
+            </button>
+            <button class="btn-secundario" style="font-size:13px;min-height:40px;" id="acao-editar-area-salao"
+                    onclick="abrirModal('modal-editar-area')">Editar</button>
+            <button class="btn-fantasma" style="font-size:13px;color:var(--amarelo);min-height:40px;"
+                    id="acao-suspender-area-salao"
+                    onclick="suspenderArea('area-salao',this)">Suspender</button>
+            <button class="btn-perigo" id="acao-excluir-area-salao"
+                    onclick="excluirArea('area-salao')">Excluir</button>
+          </div>
+        </div>
+
+        <!-- Card de área — ativa -->
+        <div class="card-area" id="area-piscina">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="indicador-status status-verde"></div>
+              <span style="font-size:16px;font-weight:600;">Piscina</span>
+            </div>
+            <span style="font-size:11px;color:var(--verde);font-weight:500;background:#F0FDF4;
+                         padding:3px 9px;border-radius:20px;">Ativa</span>
+          </div>
+          <p style="font-size:13px;color:var(--texto-secundario);line-height:1.5;margin-bottom:12px;">
+            Piscina adulto e infantil. Das 07h às 22h. Menores precisam de acompanhante.
+          </p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn-primario" style="font-size:13px;min-height:40px;padding:0.5rem 1rem;flex:1;"
+                    onclick="abrirModal('modal-reservar');definirAreaReserva('Piscina')">
+              Reservar
+            </button>
+            <button class="btn-secundario" style="font-size:13px;min-height:40px;"
+                    id="acao-editar-area-piscina">Editar</button>
+            <button class="btn-fantasma" style="font-size:13px;color:var(--amarelo);min-height:40px;"
+                    id="acao-suspender-area-piscina"
+                    onclick="suspenderArea('area-piscina',this)">Suspender</button>
+            <button class="btn-perigo" id="acao-excluir-area-piscina"
+                    onclick="excluirArea('area-piscina')">Excluir</button>
+          </div>
+        </div>
+
+        <!-- Card de área — suspensa -->
+        <div class="card-area suspensa" id="area-academia">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="indicador-status status-vermelho"></div>
+              <span style="font-size:16px;font-weight:600;">Academia</span>
+            </div>
+            <span style="font-size:11px;color:var(--vermelho);font-weight:500;background:#FEF2F2;
+                         padding:3px 9px;border-radius:20px;">Suspensa</span>
+          </div>
+          <p style="font-size:13px;color:var(--texto-secundario);line-height:1.5;margin-bottom:12px;">
+            Em manutenção. Previsão de reabertura: 15/06. Equipamentos em revisão técnica.
+          </p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn-secundario" style="font-size:13px;min-height:40px;flex:1;" disabled>
+              Indisponível
+            </button>
+            <button class="btn-fantasma" style="font-size:13px;color:var(--verde);min-height:40px;"
+                    id="acao-reativar-area-academia"
+                    onclick="reativarArea('area-academia',this)">Reativar</button>
+            <button class="btn-perigo" id="acao-excluir-area-academia"
+                    onclick="excluirArea('area-academia')">Excluir</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Aba: reservas da semana -->
+      <div id="aba-reservas" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
+          <p style="font-size:14px;color:var(--texto-secundario);">
+            Semana de <strong id="rotulo-semana">09/06 a 15/06</strong>
+          </p>
+          <select class="campo-select" style="width:180px;font-size:14px;padding:0.5rem 2.5rem 0.5rem 0.75rem;">
+            <option>Todas as áreas</option>
+            <option>Salão de Festas</option>
+            <option>Piscina</option>
+          </select>
+        </div>
+
+        <!-- Grade com scroll horizontal no mobile -->
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--borda);">
+          <div class="grade-reservas">
+            <!-- Cabeçalho -->
+            <div class="celula-reserva cabecalho"></div>
+            <div class="celula-reserva cabecalho">Seg 09</div>
+            <div class="celula-reserva cabecalho">Ter 10</div>
+            <div class="celula-reserva cabecalho">Qua 11</div>
+            <div class="celula-reserva cabecalho">Qui 12</div>
+            <div class="celula-reserva cabecalho">Sex 13</div>
+            <div class="celula-reserva cabecalho">Sáb 14</div>
+            <div class="celula-reserva cabecalho">Dom 15</div>
+            <!-- Manhã -->
+            <div class="celula-reserva rotulo-hora">08h–12h</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva ocupada">Maria S.<br/>Piscina</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva ocupada">João L.<br/>Salão</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <!-- Tarde -->
+            <div class="celula-reserva rotulo-hora">13h–18h</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva ocupada">Gabriel L.<br/>Salão</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva ocupada">Ana R.<br/>Piscina</div>
+            <div class="celula-reserva ocupada">João L.<br/>Piscina</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <!-- Noite -->
+            <div class="celula-reserva rotulo-hora">19h–23h</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva ocupada">Maria S.<br/>Salão</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+            <div class="celula-reserva ocupada">Carlos M.<br/>Salão</div>
+            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+          </div>
+        </div>
+
+        <!-- Legenda -->
+        <div style="margin-top:0.875rem;display:flex;gap:1rem;font-size:12px;color:var(--texto-secundario);">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="width:12px;height:12px;border-radius:3px;background:var(--laranja-palido);
+                        border:1px solid var(--laranja-principal);"></div> Ocupado
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="width:12px;height:12px;border-radius:3px;background:var(--superficie);
+                        border:1px solid var(--borda);"></div> Disponível
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       BARRA DE NAVEGAÇÃO INFERIOR — mobile
+  ═══════════════════════════════════════════ -->
+  <nav class="barra-nav-inferior">
+    <button class="item-nav ativo" onclick="mostrarPagina('forum')" id="nav-forum">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Fórum
+    </button>
+    <button class="item-nav" onclick="mostrarPagina('ocorrencias')" id="nav-ocorrencias">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      Ocorrências
+    </button>
+    <button class="item-nav" onclick="mostrarPagina('wiki')" id="nav-wiki">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      Wiki
+    </button>
+    <button class="item-nav" onclick="mostrarPagina('areas')" id="nav-areas">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Áreas
+    </button>
+  </nav>
+
+</div><!-- /tela-app -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     MODAIS (bottom sheets no mobile)
+═══════════════════════════════════════════════════ -->
+
+<!-- Modal: Novo aviso no fórum -->
+<div class="fundo-modal" id="modal-novo-aviso" onclick="fecharModalFora(event,'modal-novo-aviso')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Novo aviso</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-novo-aviso')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="rotulo-campo">Título</label>
+        <input class="campo-input" type="text" placeholder="Título do aviso" />
+      </div>
+      <div>
+        <label class="rotulo-campo">Descrição</label>
+        <textarea class="campo-textarea" placeholder="Descreva o aviso..."></textarea>
+      </div>
+      <div>
+        <label class="rotulo-campo">Prioridade</label>
+        <select class="campo-select">
+          <option>Normal</option>
+          <option>Urgente</option>
+        </select>
+      </div>
+      <div>
+        <label class="rotulo-campo">Foto (opcional)</label>
+        <div style="border:1.5px dashed var(--borda);border-radius:10px;padding:1.25rem;
+                    text-align:center;cursor:pointer;min-height:80px;display:flex;
+                    flex-direction:column;align-items:center;justify-content:center;"
+             onclick="document.getElementById('upload-aviso').click()">
+          <svg width="20" height="20" fill="none" stroke="var(--texto-suave)" stroke-width="1.75"
+               viewBox="0 0 24 24" style="margin-bottom:6px;">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p style="font-size:13px;color:var(--texto-suave);">Toque para adicionar imagem</p>
+          <input type="file" id="upload-aviso" accept="image/*" style="display:none;" />
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.5rem;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-novo-aviso')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;" onclick="enviarAviso()">Publicar aviso</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nova ocorrência -->
+<div class="fundo-modal" id="modal-nova-ocorrencia" onclick="fecharModalFora(event,'modal-nova-ocorrencia')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Nova ocorrência</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-nova-ocorrencia')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="rotulo-campo">Título</label>
+        <input class="campo-input" type="text" placeholder="Ex: Barulho no corredor" />
+      </div>
+      <div>
+        <label class="rotulo-campo">Descrição</label>
+        <textarea class="campo-textarea" placeholder="Descreva a ocorrência com detalhes..."></textarea>
+      </div>
+      <div>
+        <label class="rotulo-campo">Tipo</label>
+        <select class="campo-select">
+          <option>Reclamação</option>
+          <option>Elogio</option>
+        </select>
+      </div>
+      <div>
+        <label class="rotulo-campo">Foto (opcional)</label>
+        <div style="border:1.5px dashed var(--borda);border-radius:10px;padding:1.25rem;
+                    text-align:center;cursor:pointer;min-height:80px;display:flex;
+                    flex-direction:column;align-items:center;justify-content:center;"
+             onclick="document.getElementById('upload-ocorrencia').click()">
+          <svg width="20" height="20" fill="none" stroke="var(--texto-suave)" stroke-width="1.75"
+               viewBox="0 0 24 24" style="margin-bottom:6px;">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p style="font-size:13px;color:var(--texto-suave);">Toque para adicionar imagem</p>
+          <input type="file" id="upload-ocorrencia" accept="image/*" style="display:none;" />
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.5rem;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-nova-ocorrencia')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;" onclick="enviarOcorrencia()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar wiki -->
+<div class="fundo-modal" id="modal-editar-wiki" onclick="fecharModalFora(event,'modal-editar-wiki')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Editar Wiki</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-editar-wiki')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="rotulo-campo">Nome do condomínio</label>
+        <input class="campo-input" type="text" value="Residencial Palmeiras" />
+      </div>
+      <div>
+        <label class="rotulo-campo">Conteúdo</label>
+        <textarea class="campo-textarea" style="min-height:160px;"
+                  placeholder="Informações do condomínio...">Condomínio localizado em Itajaí — SC. Fundado em 2010. 4 blocos, 120 unidades.</textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.5rem;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-editar-wiki')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;"
+              onclick="fecharModal('modal-editar-wiki');mostrarToast('Wiki atualizada com sucesso')">
+        Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nova área comum -->
+<div class="fundo-modal" id="modal-nova-area" onclick="fecharModalFora(event,'modal-nova-area')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Nova área comum</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-nova-area')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="rotulo-campo">Nome da área</label>
+        <input class="campo-input" type="text" placeholder="Ex: Churrasqueira" />
+      </div>
+      <div>
+        <label class="rotulo-campo">Descrição</label>
+        <textarea class="campo-textarea" placeholder="Capacidade, horários, regras de uso..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="rotulo-campo">Abre às</label>
+          <input class="campo-input" type="time" value="08:00" />
+        </div>
+        <div>
+          <label class="rotulo-campo">Fecha às</label>
+          <input class="campo-input" type="time" value="22:00" />
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.5rem;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-nova-area')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;"
+              onclick="fecharModal('modal-nova-area');mostrarToast('Área criada com sucesso')">
+        Criar área
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar área -->
+<div class="fundo-modal" id="modal-editar-area" onclick="fecharModalFora(event,'modal-editar-area')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Editar área</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-editar-area')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="rotulo-campo">Nome da área</label>
+        <input class="campo-input" type="text" value="Salão de Festas" />
+      </div>
+      <div>
+        <label class="rotulo-campo">Descrição</label>
+        <textarea class="campo-textarea">Capacidade para 80 pessoas. Das 08h às 23h. Cozinha equipada e sistema de som.</textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.5rem;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-editar-area')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;"
+              onclick="fecharModal('modal-editar-area');mostrarToast('Área atualizada')">
+        Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Reservar área -->
+<div class="fundo-modal" id="modal-reservar" onclick="fecharModalFora(event,'modal-reservar')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Reservar área</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-reservar')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="rotulo-campo">Área</label>
+        <select class="campo-select" id="selecionar-area-reserva">
+          <option>Salão de Festas</option>
+          <option>Piscina</option>
+        </select>
+      </div>
+      <div>
+        <label class="rotulo-campo">Data (somente semana atual)</label>
+        <input class="campo-input" type="date" id="data-reserva" />
+      </div>
+      <div>
+        <label class="rotulo-campo">Período</label>
+        <select class="campo-select">
+          <option>Manhã (08h – 12h)</option>
+          <option>Tarde (13h – 18h)</option>
+          <option>Noite (19h – 23h)</option>
+        </select>
+      </div>
+      <!-- Aviso sobre regra de reserva -->
+      <div style="background:var(--laranja-palido);border-radius:10px;padding:12px;
+                  font-size:13px;color:var(--laranja-escuro);line-height:1.5;">
+        Reservas são permitidas somente para a semana corrente. Após a confirmação, um código de acesso será gerado.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.5rem;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-reservar')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;" onclick="confirmarReserva()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Código de acesso gerado -->
+<div class="fundo-modal" id="modal-codigo" onclick="fecharModalFora(event,'modal-codigo')">
+  <div class="caixa-modal" style="text-align:center;">
+    <div class="alca-modal"></div>
+    <div style="width:60px;height:60px;border-radius:18px;background:var(--laranja-palido);
+                display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+      <svg width="26" height="26" fill="none" stroke="var(--laranja-principal)" stroke-width="1.75" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:6px;">Reserva confirmada!</h2>
+    <p style="font-size:14px;color:var(--texto-secundario);margin-bottom:1.5rem;line-height:1.55;">
+      Seu código de acesso para o período reservado:
+    </p>
+    <div style="background:var(--fundo);border:2px dashed var(--borda-forte);border-radius:14px;
+                padding:1.5rem;margin-bottom:1.5rem;">
+      <p style="font-family:'DM Mono',monospace;font-size:30px;font-weight:500;
+                letter-spacing:6px;color:var(--texto-principal);" id="codigo-gerado">A7F3-9K2M</p>
+      <p style="font-size:12px;color:var(--texto-suave);margin-top:8px;">
+        Válido somente durante o período da reserva
+      </p>
+    </div>
+    <button class="btn-primario" style="width:100%;" onclick="fecharModal('modal-codigo')">
+      Entendido
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Esqueci a senha -->
+<div class="fundo-modal" id="modal-esqueci-senha" onclick="fecharModalFora(event,'modal-esqueci-senha')">
+  <div class="caixa-modal">
+    <div class="alca-modal"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:700;">Recuperar acesso</h2>
+      <button class="btn-fantasma" onclick="fecharModal('modal-esqueci-senha')" style="padding:0.35rem;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <p style="font-size:14px;color:var(--texto-secundario);margin-bottom:1.25rem;line-height:1.55;">
+      Informe seu CPF cadastrado. A administração do condomínio será notificada para te auxiliar.
+    </p>
+    <div style="margin-bottom:1.25rem;">
+      <label class="rotulo-campo">CPF</label>
+      <input class="campo-input" type="tel" inputmode="numeric"
+             placeholder="000.000.000-00" maxlength="14"
+             oninput="aplicarMascaraCPF(this)" />
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-esqueci-senha')">Cancelar</button>
+      <button class="btn-primario" style="flex:2;"
+              onclick="fecharModal('modal-esqueci-senha');mostrarToast('Solicitação enviada à administração')">
+        Enviar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer: perfil do usuário (bottom sheet) -->
+<div class="drawer-perfil" id="drawer-perfil" onclick="fecharDrawerPerfil(event)">
+  <div class="conteudo-drawer">
+    <div class="alca-modal"></div>
+    <!-- Info do usuário -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;
+                padding-bottom:1.25rem;border-bottom:1px solid var(--borda);">
+      <div class="avatar-post avatar-laranja" id="avatar-drawer" style="width:48px;height:48px;font-size:18px;">A</div>
+      <div>
+        <p style="font-size:16px;font-weight:600;" id="nome-drawer">Artur Vargas</p>
+        <span class="badge-sindico" id="badge-drawer">SÍNDICO</span>
+      </div>
+    </div>
+    <!-- Opções -->
+    <a href="http://localhost:8080/h2-console" class="btn-secundario" style="width:100%;margin-bottom:8px;justify-content:flex-start;gap:12px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      Gerenciador
+    </a>
+    <button class="btn-secundario" style="width:100%;margin-bottom:8px;justify-content:flex-start;gap:12px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Meu perfil
+    </button>
+    <button class="btn-perigo" style="width:100%;font-size:14px;min-height:48px;border-radius:10px;"
+            onclick="realizarLogout()">
+      Sair da conta
+    </button>
+  </div>
+</div>
+
+<!-- Toast de notificação -->
+<div class="toast-aviso" id="toast-aviso">
+  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="mensagem-toast">Ação realizada</span>
+</div>
+
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
