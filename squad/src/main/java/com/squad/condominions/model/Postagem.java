@@ -45,7 +45,7 @@ public class Postagem {
     private TipoTag tag;
 
     @CreationTimestamp
-    @Column(name = "data_publicacao", insertable = false, updatable = false)
+    @Column(name = "data_publicacao", updatable = false)
     private LocalDateTime dataPublicacao;
 
     @Column(name = "tipo_post", insertable = true, updatable = false, nullable = false)
@@ -53,7 +53,7 @@ public class Postagem {
     private TipoPost tipoPost;
 
     @UpdateTimestamp
-    @Column(name = "ult_atualizacao", insertable = false)
+    @Column(name = "ult_atualizacao", updatable = true)
     private LocalDateTime ultAtualizacao;
 
     @ManyToOne
