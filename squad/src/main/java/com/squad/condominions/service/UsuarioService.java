@@ -34,6 +34,7 @@ public class UsuarioService {
         existente.setNome(usuario.getNome());
         existente.setSobrenome(usuario.getSobrenome());
         existente.setTipo(usuario.getTipo());
+        existente.setSenha(usuario.getSenha());
         repository.save(existente);
 
         return ResponseEntity.ok(existente);
@@ -64,7 +65,11 @@ public class UsuarioService {
         return usuario.getNome() != null &&
                 usuario.getSobrenome() != null &&
                  usuario.getTipo() != null &&
-                  !usuario.getNome().isBlank() &&
-                   !usuario.getSobrenome().isBlank();
+                  usuario.getCpf() != null &&
+                   usuario.getSenha() != null &&
+                    !usuario.getNome().isBlank() &&
+                     !usuario.getSobrenome().isBlank() &&
+                      !usuario.getCpf().isBlank() &&
+                       !usuario.getSenha().isBlank();
     }
 }
