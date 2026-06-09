@@ -257,8 +257,24 @@ function editarPost(botao, tipo) {
 // ═══════════════════════════════════════════════
 // ENVIAR AVISO NO FÓRUM
 // ═══════════════════════════════════════════════
-function enviarAviso() {
+function handleNovoAviso(event) {
+  event.preventDefault();
+  const form = event.target;
+  
+  const titulo     = form.titulo.value.trim();
+  const descricao  = form.descricao.value.trim();
+  const prioridade = form.prioridade.value;       // "normal" | "urgente"
+  const foto       = form.foto.files[0] ?? null;  // File | null
+
+  enviarAviso(titulo, descricao, prioridade, foto);
+}
+
+// ═══════════════════════════════════════════════
+// ENVIAR AVISO NO FÓRUM
+// ═══════════════════════════════════════════════
+function enviarAviso(titulo, descricao, prioridade, foto) {
   fecharModal('modal-novo-aviso');
+  console.log(titulo, descricao, prioridade, foto);
   mostrarToast('Aviso publicado com sucesso');
 }
 
@@ -393,10 +409,14 @@ async function listarPostagensForum() {
    let container = document.getElementById('lista-forum');
    let retorno = await postagemApi.listar();
    
-   retorno.forEach(postagem => {
-      const card = new CardPostagemForum(postagem);
-      container.innerHTML += card.render();
-   })
+   if(retorno.length > 0) {
+      container.innerHTML = '';
+      retorno.forEach(postagem => {
+        const card = new CardPostagemForum(postagem);
+        container.innerHTML += card.render();
+      });
+   }
+   
 }
 
 Object.assign(window, {
@@ -417,6 +437,7 @@ Object.assign(window, {
   alternarPin,
   editarPost,
   enviarAviso,
+  handleNovoAviso,
   enviarOcorrencia,
   filtrarEtiqueta,
   suspenderArea,
