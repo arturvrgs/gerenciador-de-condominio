@@ -34,7 +34,7 @@ public class WikiService {
                 .orElseThrow(() -> new RuntimeException("Wiki não encontrada!"));
 
         existente.setNome(wiki.getNome());
-        existente.setNome(wiki.getNome());
+        existente.setDescricao(wiki.getDescricao());
         repository.save(existente);
 
         return ResponseEntity.ok(existente);
