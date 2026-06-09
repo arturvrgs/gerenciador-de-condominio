@@ -7,14 +7,6 @@ import jakarta.persistence.*;
 @Table(name = "usuarios")
 public class Usuario {
 
-    public Usuario(String nome, String sobrenome, TipoUsuario tipo) {
-        this.nome = nome;
-        this.sobrenome = sobrenome;
-        this.tipo = tipo;
-    }
-
-    public Usuario() {}
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,6 +20,22 @@ public class Usuario {
     @Column(name = "tipo", nullable = false)
     @Enumerated(EnumType.STRING)
     private TipoUsuario tipo;
+
+    @Column(name = "cpf", nullable = false)
+    private String cpf;
+
+    @Column(name = "senha", nullable = false)
+    private String senha;
+
+    public Usuario() {}
+
+    public Usuario(String nome, String sobrenome, TipoUsuario tipo, String cpf, String senha) {
+        this.nome = nome;
+        this.sobrenome = sobrenome;
+        this.tipo = tipo;
+        this.cpf = cpf;
+        this.senha = senha;
+    }
 
     public Long getId() {
         return id;
@@ -59,5 +67,21 @@ public class Usuario {
 
     public void setTipo(TipoUsuario tipo) {
         this.tipo = tipo;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 }
