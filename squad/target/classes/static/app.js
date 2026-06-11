@@ -12,6 +12,12 @@ let usuarioAtual = {
 };
 
 // ═══════════════════════════════════════════════
+// ESTADO DO FÓRUM (cache + modo edição)
+// ═══════════════════════════════════════════════
+let postagensCache = {};
+let editandoPostagemId = null;
+
+// ═══════════════════════════════════════════════
 // MÁSCARA DE CPF
 // ═══════════════════════════════════════════════
 function aplicarMascaraCPF(campo) {
@@ -260,31 +266,74 @@ function alternarPin(botao) {
 }
 
 // ═══════════════════════════════════════════════
+// ABRIR MODAL CRIAR AVISO (botão "Novo aviso" / FAB)
+// ═══════════════════════════════════════════════
+function abrirModalCriarAviso() {
+  document.getElementById('form-novo-aviso').reset();
+  document.getElementById('titulo-modal-aviso').textContent = 'Novo aviso';
+  document.getElementById('btn-modal-postagem').textContent = 'Publicar aviso';
+  editandoPostagemId = null;
+  abrirModal('modal-novo-aviso');
+}
+
+// ═══════════════════════════════════════════════
+// FECHAR MODAL AVISO (reseta estado de edição)
+// ═══════════════════════════════════════════════
+function fecharModalAviso() {
+  editandoPostagemId = null;
+  document.getElementById('titulo-modal-aviso').textContent = 'Novo aviso';
+  document.getElementById('btn-modal-postagem').textContent = 'Publicar aviso';
+  fecharModal('modal-novo-aviso');
+}
+
+// ═══════════════════════════════════════════════
 // EDITAR POST
 // ═══════════════════════════════════════════════
 function editarPost(botao, tipo) {
-  abrirModal(tipo === 'forum' ? 'modal-novo-aviso' : 'modal-nova-ocorrencia');
+  if (tipo === 'forum') {
+    const card = botao.closest('.card-post');
+    const id = card.dataset.id;
+    const postagem = postagensCache[id];
+
+    if (postagem) {
+      document.getElementById('aviso-titulo').value    = postagem.titulo;
+      document.getElementById('aviso-descricao').value = postagem.descricao;
+      document.getElementById('aviso-tag').value       = postagem.tag || 'NULA';
+
+      document.getElementById('titulo-modal-aviso').textContent = 'Editar aviso';
+      document.getElementById('btn-modal-postagem').textContent = 'Salvar alterações';
+
+      editandoPostagemId = id;
+    }
+    abrirModal('modal-novo-aviso');
+  } else {
+    abrirModal('modal-nova-ocorrencia');
+  }
 }
 
 function handleNovaPostagemForum(event) {
   event.preventDefault();
   const form = event.target;
 
-  const novaPostagem = {
+  const dadosPostagem = {
     titulo:     form.titulo.value.trim(),
     descricao:  form.descricao.value.trim(),
     tag:        form.tag.value,
-    urlImagem:  null,    
+    urlImagem:  null,
     tipoPost:   'FORUM',
     usuario:    { id: usuarioAtual.id }
   };
 
-  if (!novaPostagem.titulo || !novaPostagem.descricao) {
+  if (!dadosPostagem.titulo || !dadosPostagem.descricao) {
     mostrarToast('Preencha todos os campos obrigatórios');
     return;
   }
 
-  criarPostagem(novaPostagem);
+  if (editandoPostagemId !== null) {
+    atualizarPostagem(editandoPostagemId, dadosPostagem);
+  } else {
+    criarPostagem(dadosPostagem);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -293,12 +342,27 @@ function handleNovaPostagemForum(event) {
 async function criarPostagem(novaPostagem) {
   try {
     await postagemApi.criar(novaPostagem);
-    fecharModal('modal-novo-aviso');
+    fecharModalAviso();
     mostrarToast('Postagem publicada com sucesso');
     await listarPostagensForum();
   } catch (erro) {
     console.error(erro);
     mostrarToast('Erro ao publicar postagem');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ATUALIZAR PUBLICAÇÃO NO FÓRUM
+// ═══════════════════════════════════════════════
+async function atualizarPostagem(id, postagem) {
+  try {
+    await postagemApi.atualizar(id, postagem);
+    fecharModalAviso();
+    mostrarToast('Postagem atualizada com sucesso');
+    await listarPostagensForum();
+  } catch (erro) {
+    console.error(erro);
+    mostrarToast('Erro ao atualizar postagem');
   }
 }
 
@@ -432,10 +496,12 @@ function definirLabelSemana() {
 async function listarPostagensForum() {
    let container = document.getElementById('lista-forum');
    let retorno = await postagemApi.listar();
-   
+   postagensCache = {};
+
    if(retorno.length > 0) {
       container.innerHTML = '';
       retorno.forEach(postagem => {
+        postagensCache[postagem.id] = postagem;
         const card = new CardPostagemForum(postagem);
         container.innerHTML += card.render();
       });
@@ -466,6 +532,8 @@ Object.assign(window, {
   abrirModal,
   fecharModal,
   fecharModalFora,
+  fecharModalAviso,
+  abrirModalCriarAviso,
   abrirDrawerPerfil,
   fecharDrawerPerfil,
   alternarVoto,
@@ -473,6 +541,7 @@ Object.assign(window, {
   alternarPin,
   editarPost,
   criarPostagem,
+  atualizarPostagem,
   handleNovaPostagemForum,
   enviarOcorrencia,
   filtrarEtiqueta,
