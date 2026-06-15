@@ -634,6 +634,11 @@ async function handleSalvarWiki() {
     return;
   }
 
+  if(usuarioAtual.perfil !== 'sindico') {
+    mostrarToast('Apenas o síndico pode editar a wiki');
+    return;
+  }
+
   const dados = { nome, descricao };
 
   try {
