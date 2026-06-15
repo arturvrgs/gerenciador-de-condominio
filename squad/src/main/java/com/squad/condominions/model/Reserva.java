@@ -1,10 +1,15 @@
 package com.squad.condominions.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservas")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reserva {
 
     @Id
@@ -24,29 +29,4 @@ public class Reserva {
 
     @Column(name = "data_fim", nullable = false)
     private LocalDateTime dataFim;
-
-    public Reserva() {}
-
-    public Reserva(Usuario usuario, AreaComum areaComum,
-                   LocalDateTime dataInicio, LocalDateTime dataFim) {
-        this.usuario   = usuario;
-        this.areaComum = areaComum;
-        this.dataInicio    = dataInicio;
-        this.dataFim       = dataFim;
-    }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
-
-    public AreaComum getAreaComum() { return areaComum; }
-    public void setAreaComum(AreaComum areaComum) { this.areaComum = areaComum; }
-
-    public LocalDateTime getDataInicio() { return dataInicio; }
-    public void setDataInicio(LocalDateTime inicio) { this.dataInicio = inicio; }
-
-    public LocalDateTime getDataFim() { return dataFim; }
-    public void setDataFim(LocalDateTime fim) { this.dataFim = fim; }
 }

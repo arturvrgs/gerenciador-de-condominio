@@ -556,27 +556,24 @@ async function excluirOcorrencia(id, botao) {
 
 // Up vote — ainda sem endpoint dedicado; incrementa localmente e atualiza via PUT
 async function alternarVoto(botao, id) {
-  const elContador  = botao.querySelector('span');
-  const estaAtivo   = botao.classList.toggle('ativo');
-  const valorAtual  = parseInt(elContador.textContent);
-  const novoValor   = estaAtivo ? valorAtual + 1 : valorAtual - 1;
-  elContador.textContent = novoValor;
+  const elContador = botao.querySelector('span');
+  const estaAtivo  = botao.classList.toggle('ativo');
+  const valorAtual = parseInt(elContador.textContent);
 
-  const ocorrencia = ocorrenciasCache[id];
-  if (!ocorrencia) return;
+  // Atualiza visualmente de imediato (optimistic update)
+  elContador.textContent = estaAtivo ? valorAtual + 1 : valorAtual - 1;
 
   try {
-    await postagemApi.atualizar(id, {
-      ...ocorrencia,
-      qtdeUpvotes: novoValor,
-      usuario: { id: ocorrencia.usuario.id },
-    });
-    ocorrenciasCache[id] = { ...ocorrencia, qtdeUpvotes: novoValor };
+    const atualizada = await postagemApi.upvote(id, estaAtivo);
+    // Sincroniza com o valor real retornado pelo backend
+    elContador.textContent = atualizada.qtdeUpvotes;
+    ocorrenciasCache[id] = atualizada;
   } catch (erro) {
     // Reverte visualmente em caso de falha
     botao.classList.toggle('ativo');
     elContador.textContent = valorAtual;
     console.error('Erro ao registrar voto:', erro);
+    mostrarToast('Erro ao registrar voto');
   }
 }
 

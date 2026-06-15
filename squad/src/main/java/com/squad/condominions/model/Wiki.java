@@ -1,10 +1,16 @@
 package com.squad.condominions.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "wikis")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Wiki {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -14,31 +20,4 @@ public class Wiki {
 
     @Column(name = "descricao", nullable = false)
     private String descricao;
-
-    public Wiki(String nome, String descricao) {
-        this.nome = nome;
-        this.descricao = descricao;
-    }
-
-    public Wiki() {}
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
 }
