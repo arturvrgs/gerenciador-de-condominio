@@ -5,6 +5,7 @@ import { postagemApi }       from './api/postagem.js';
 import { areaComumApi }      from './api/areacomum.js';
 import { reservaApi }        from './api/reserva.js';
 import { wikiApi }           from './api/wiki.js';
+import { usuarioApi } from './api/usuario.js';
 
 // ═══════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -59,15 +60,32 @@ function aplicarMascaraCPF(campo) {
 // ═══════════════════════════════════════════════
 // AUTENTICAÇÃO
 // ═══════════════════════════════════════════════
-function realizarLogin() {
+async function realizarLogin() {
   const cpf   = document.getElementById('campo-cpf').value;
   const senha = document.getElementById('campo-senha').value;
+
   if (!cpf || !senha) {
     mostrarToast('Preencha CPF e senha');
     return;
   }
-  // TODO: integrar endpoint de autenticação quando implementado
-  entrarComo('sindico');
+
+  try {
+    const usuario = await usuarioApi.login(cpf, senha);
+    usuarioAtual = {
+      id:       usuario.id,
+      nome:     `${usuario.nome} ${usuario.sobrenome}`,
+      perfil:   usuario.tipo === 'ADMINISTRADOR' ? 'sindico' : 'morador',
+      iniciais: usuario.nome.charAt(0).toUpperCase(),
+    };
+    aplicarPermissoesDePerfil();
+    trocarTela('tela-app');
+    carregarForum();
+    carregarOcorrencias();
+    carregarAreasComuns();
+    carregarWiki();
+  } catch (erro) {
+    mostrarToast('CPF ou senha incorretos');
+  }
 }
 
 function entrarComo(perfil) {
@@ -279,7 +297,7 @@ async function carregarForum() {
     container.innerHTML = '';
     ordenadas.forEach(postagem => {
       postagensForumCache[postagem.id] = postagem;
-      const card = new CardPostagemForum(postagem);
+      const card = new CardPostagemForum(postagem, usuarioAtual.perfil === 'sindico');
       container.innerHTML += card.render();
     });
   } catch (erro) {
@@ -538,27 +556,24 @@ async function excluirOcorrencia(id, botao) {
 
 // Up vote — ainda sem endpoint dedicado; incrementa localmente e atualiza via PUT
 async function alternarVoto(botao, id) {
-  const elContador  = botao.querySelector('span');
-  const estaAtivo   = botao.classList.toggle('ativo');
-  const valorAtual  = parseInt(elContador.textContent);
-  const novoValor   = estaAtivo ? valorAtual + 1 : valorAtual - 1;
-  elContador.textContent = novoValor;
+  const elContador = botao.querySelector('span');
+  const estaAtivo  = botao.classList.toggle('ativo');
+  const valorAtual = parseInt(elContador.textContent);
 
-  const ocorrencia = ocorrenciasCache[id];
-  if (!ocorrencia) return;
+  // Atualiza visualmente de imediato (optimistic update)
+  elContador.textContent = estaAtivo ? valorAtual + 1 : valorAtual - 1;
 
   try {
-    await postagemApi.atualizar(id, {
-      ...ocorrencia,
-      qtdeUpvotes: novoValor,
-      usuario: { id: ocorrencia.usuario.id },
-    });
-    ocorrenciasCache[id] = { ...ocorrencia, qtdeUpvotes: novoValor };
+    const atualizada = await postagemApi.upvote(id, estaAtivo);
+    // Sincroniza com o valor real retornado pelo backend
+    elContador.textContent = atualizada.qtdeUpvotes;
+    ocorrenciasCache[id] = atualizada;
   } catch (erro) {
     // Reverte visualmente em caso de falha
     botao.classList.toggle('ativo');
     elContador.textContent = valorAtual;
     console.error('Erro ao registrar voto:', erro);
+    mostrarToast('Erro ao registrar voto');
   }
 }
 
@@ -575,14 +590,12 @@ function filtrarEtiqueta(botao, etiqueta) {
 // ═══════════════════════════════════════════════
 
 async function carregarWiki() {
-  // A wiki tem id fixo 1 — único registro por condomínio
   try {
-    const wiki = await wikiApi.acharPorId(1);
+    const wiki = await wikiApi.buscarPrimeira();
     wikiId = wiki.id;
     renderizarConteudoWiki(wiki);
   } catch (erro) {
-    // Wiki ainda não cadastrada — exibe estado vazio
-    console.warn('Wiki não encontrada:', erro);
+    console.warn('Wiki não cadastrada ainda:', erro);
     wikiId = null;
   }
 }
@@ -590,9 +603,11 @@ async function carregarWiki() {
 function renderizarConteudoWiki(wiki) {
   const elNome     = document.getElementById('nome-condominio-wiki');
   const elConteudo = document.getElementById('conteudo-wiki');
+  const elData     = document.getElementById('data-atualizacao-wiki');
 
   if (elNome)     elNome.textContent     = wiki.nome;
   if (elConteudo) elConteudo.textContent = wiki.descricao;
+  if (elData)     elData.textContent     = 'Última atualização: ' + new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 // Abre modal de edição da wiki preenchido com dados atuais

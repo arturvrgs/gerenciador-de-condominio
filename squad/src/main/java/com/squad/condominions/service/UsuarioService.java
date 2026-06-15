@@ -2,6 +2,7 @@ package com.squad.condominions.service;
 
 import com.squad.condominions.model.Usuario;
 import com.squad.condominions.repository.UsuarioRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,5 +72,12 @@ public class UsuarioService {
                      !usuario.getSobrenome().isBlank() &&
                       !usuario.getCpf().isBlank() &&
                        !usuario.getSenha().isBlank();
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> login(String cpf, String senha) {
+        return repository.findByCpfAndSenha(cpf, senha)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("CPF ou senha incorretos"));
     }
 }

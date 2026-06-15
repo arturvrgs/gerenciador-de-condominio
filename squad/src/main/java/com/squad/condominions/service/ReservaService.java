@@ -34,7 +34,7 @@ public class ReservaService {
         reserva.setUsuario(buscarUsuario(reserva.getUsuario().getId()));
         reserva.setAreaComum(buscarAreaComum(reserva.getAreaComum().getId()));
 
-        Optional<String> erroValidacao = validarDatasReserva(reserva);
+        Optional<String> erroValidacao = validarDatasReserva(reserva, null);
         if (erroValidacao.isPresent()) {
             return ResponseEntity.badRequest().body(erroValidacao.get());
         }
@@ -47,7 +47,7 @@ public class ReservaService {
         Reserva existente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada!"));
 
-        Optional<String> erroValidacao = validarDatasReserva(reserva);
+        Optional<String> erroValidacao = validarDatasReserva(reserva, id);
         if (erroValidacao.isPresent()) {
             return ResponseEntity.badRequest().body(erroValidacao.get());
         }
@@ -98,7 +98,7 @@ public class ReservaService {
                 .orElseThrow(() -> new RuntimeException("Área comum não encontrada!"));
     }
 
-    private Optional<String> validarDatasReserva(Reserva reserva) {
+    private Optional<String> validarDatasReserva(Reserva reserva, Long idReservaAtual) {
         LocalDateTime agora = LocalDateTime.now();
 
         if (reserva.getDataInicio().isAfter(agora.plusWeeks(1))) {
@@ -115,6 +115,17 @@ public class ReservaService {
 
         if (Duration.between(reserva.getDataInicio(), reserva.getDataFim()).toHours() > 16) {
             return Optional.of("A reserva não pode ultrapassar 16 horas");
+        }
+
+        boolean conflito = repository.existeConflito(
+                reserva.getAreaComum().getId(),
+                reserva.getDataInicio(),
+                reserva.getDataFim(),
+                idReservaAtual == null ? -1L : idReservaAtual
+        );
+
+        if (conflito) {
+            return Optional.of("Já existe uma reserva para esta área neste período");
         }
 
         return Optional.empty();

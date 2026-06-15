@@ -47,5 +47,10 @@ public class PostagemController {
         return service.listarPorTipoPost(tipoPost);
     }
 
-
+    @PatchMapping("/{id}/upvote")
+    public ResponseEntity<Postagem> upvote(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "true") boolean incrementar) {
+        return service.alternarUpvote(id, incrementar);
+    }
 }
