@@ -12,19 +12,19 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Recurso não encontrado — RuntimeException lançada nos services
+    // runtimeException nos services
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         return construirResposta(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    // Argumento inválido passado para um mét
+    // argumento inv
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return construirResposta(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    // Qualquer outro erro não previsto
+    // qualquer outro
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception ex) {
         return construirResposta(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor");

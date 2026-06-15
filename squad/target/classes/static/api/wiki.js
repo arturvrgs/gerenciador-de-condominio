@@ -7,4 +7,5 @@ export const wikiApi = {
   acharPorId: (id)       => http.get(`${CAMINHO}/${id}`),
   criar:      (wiki)     => http.post(CAMINHO, wiki),
   atualizar:  (id, wiki) => http.put(`${CAMINHO}/${id}`, wiki),
+  buscarPrimeira: () => http.get(CAMINHO),
 };
