@@ -29,4 +29,9 @@ public class WikiController {
     public ResponseEntity<Wiki> acharPorId(@PathVariable Long id) {
         return service.acharPorId(id);
     }
+
+    @GetMapping
+    public ResponseEntity<Wiki> buscarPrimeira() {
+        return service.buscarPrimeira();
+    }
 }

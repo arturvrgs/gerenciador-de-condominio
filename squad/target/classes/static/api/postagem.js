@@ -10,4 +10,5 @@ export const postagemApi = {
   criar:           (postagem)      => http.post(PATH, postagem),
   atualizar:       (id, postagem)  => http.put(`${PATH}/${id}`, postagem),
   deletar:         (id)            => http.delete(`${PATH}/${id}`),
+  upvote: (id, incrementar = true) => http.patch(`${PATH}/${id}/upvote?incrementar=${incrementar}`),
 };

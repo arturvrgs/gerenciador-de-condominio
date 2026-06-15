@@ -5,6 +5,7 @@ import { postagemApi }       from './api/postagem.js';
 import { areaComumApi }      from './api/areacomum.js';
 import { reservaApi }        from './api/reserva.js';
 import { wikiApi }           from './api/wiki.js';
+import { usuarioApi } from './api/usuario.js';
 
 // ═══════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -39,6 +40,12 @@ let editandoAreaId = null;
 // Id da wiki atual (existe somente uma por condomínio)
 let wikiId = null;
 
+// Cache das reservas carregadas (usado para reaplicar o filtro de área sem novo fetch)
+let reservasSemanaCache = [];
+
+// Área selecionada para filtrar a grade de "Reservas da semana" ('todas' = sem filtro)
+let areaFiltroReservas = 'todas';
+
 // ═══════════════════════════════════════════════
 // MÁSCARA DE CPF
 // ═══════════════════════════════════════════════
@@ -53,15 +60,32 @@ function aplicarMascaraCPF(campo) {
 // ═══════════════════════════════════════════════
 // AUTENTICAÇÃO
 // ═══════════════════════════════════════════════
-function realizarLogin() {
+async function realizarLogin() {
   const cpf   = document.getElementById('campo-cpf').value;
   const senha = document.getElementById('campo-senha').value;
+
   if (!cpf || !senha) {
     mostrarToast('Preencha CPF e senha');
     return;
   }
-  // TODO: integrar endpoint de autenticação quando implementado
-  entrarComo('sindico');
+
+  try {
+    const usuario = await usuarioApi.login(cpf, senha);
+    usuarioAtual = {
+      id:       usuario.id,
+      nome:     `${usuario.nome} ${usuario.sobrenome}`,
+      perfil:   usuario.tipo === 'ADMINISTRADOR' ? 'sindico' : 'morador',
+      iniciais: usuario.nome.charAt(0).toUpperCase(),
+    };
+    aplicarPermissoesDePerfil();
+    trocarTela('tela-app');
+    carregarForum();
+    carregarOcorrencias();
+    carregarAreasComuns();
+    carregarWiki();
+  } catch (erro) {
+    mostrarToast('CPF ou senha incorretos');
+  }
 }
 
 function entrarComo(perfil) {
@@ -273,7 +297,7 @@ async function carregarForum() {
     container.innerHTML = '';
     ordenadas.forEach(postagem => {
       postagensForumCache[postagem.id] = postagem;
-      const card = new CardPostagemForum(postagem);
+      const card = new CardPostagemForum(postagem, usuarioAtual.perfil === 'sindico');
       container.innerHTML += card.render();
     });
   } catch (erro) {
@@ -532,27 +556,24 @@ async function excluirOcorrencia(id, botao) {
 
 // Up vote — ainda sem endpoint dedicado; incrementa localmente e atualiza via PUT
 async function alternarVoto(botao, id) {
-  const elContador  = botao.querySelector('span');
-  const estaAtivo   = botao.classList.toggle('ativo');
-  const valorAtual  = parseInt(elContador.textContent);
-  const novoValor   = estaAtivo ? valorAtual + 1 : valorAtual - 1;
-  elContador.textContent = novoValor;
+  const elContador = botao.querySelector('span');
+  const estaAtivo  = botao.classList.toggle('ativo');
+  const valorAtual = parseInt(elContador.textContent);
 
-  const ocorrencia = ocorrenciasCache[id];
-  if (!ocorrencia) return;
+  // Atualiza visualmente de imediato (optimistic update)
+  elContador.textContent = estaAtivo ? valorAtual + 1 : valorAtual - 1;
 
   try {
-    await postagemApi.atualizar(id, {
-      ...ocorrencia,
-      qtdeUpvotes: novoValor,
-      usuario: { id: ocorrencia.usuario.id },
-    });
-    ocorrenciasCache[id] = { ...ocorrencia, qtdeUpvotes: novoValor };
+    const atualizada = await postagemApi.upvote(id, estaAtivo);
+    // Sincroniza com o valor real retornado pelo backend
+    elContador.textContent = atualizada.qtdeUpvotes;
+    ocorrenciasCache[id] = atualizada;
   } catch (erro) {
     // Reverte visualmente em caso de falha
     botao.classList.toggle('ativo');
     elContador.textContent = valorAtual;
     console.error('Erro ao registrar voto:', erro);
+    mostrarToast('Erro ao registrar voto');
   }
 }
 
@@ -569,14 +590,12 @@ function filtrarEtiqueta(botao, etiqueta) {
 // ═══════════════════════════════════════════════
 
 async function carregarWiki() {
-  // A wiki tem id fixo 1 — único registro por condomínio
   try {
-    const wiki = await wikiApi.acharPorId(1);
+    const wiki = await wikiApi.buscarPrimeira();
     wikiId = wiki.id;
     renderizarConteudoWiki(wiki);
   } catch (erro) {
-    // Wiki ainda não cadastrada — exibe estado vazio
-    console.warn('Wiki não encontrada:', erro);
+    console.warn('Wiki não cadastrada ainda:', erro);
     wikiId = null;
   }
 }
@@ -584,9 +603,11 @@ async function carregarWiki() {
 function renderizarConteudoWiki(wiki) {
   const elNome     = document.getElementById('nome-condominio-wiki');
   const elConteudo = document.getElementById('conteudo-wiki');
+  const elData     = document.getElementById('data-atualizacao-wiki');
 
   if (elNome)     elNome.textContent     = wiki.nome;
   if (elConteudo) elConteudo.textContent = wiki.descricao;
+  if (elData)     elData.textContent     = 'Última atualização: ' + new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 // Abre modal de edição da wiki preenchido com dados atuais
@@ -641,6 +662,9 @@ async function carregarAreasComuns() {
     const areas = await areaComumApi.listar();
     areasCache = {};
 
+    // Atualiza o filtro de áreas de "Reservas da semana" com dados reais
+    popularFiltroAreaReservas(areas || []);
+
     if (!areas || areas.length === 0) {
       container.innerHTML = htmlEstadoVazio('Nenhuma área comum cadastrada.');
       return;
@@ -660,6 +684,27 @@ async function carregarAreasComuns() {
     console.error('Erro ao carregar áreas comuns:', erro);
     container.innerHTML = htmlEstadoVazio('Erro ao carregar áreas. Tente novamente.');
   }
+}
+
+// Preenche o filtro de área usado na grade de "Reservas da semana" com as áreas reais
+function popularFiltroAreaReservas(areas) {
+  const seletor = document.getElementById('filtro-area-reservas');
+  if (!seletor) return;
+
+  const valorAtual = seletor.value || 'todas';
+
+  seletor.innerHTML = '<option value="todas">Todas as áreas</option>';
+  areas.forEach(area => {
+    const op = document.createElement('option');
+    op.value       = area.id;
+    op.textContent = area.nome;
+    seletor.appendChild(op);
+  });
+
+  // Mantém a seleção anterior caso a área ainda exista; senão volta para "todas"
+  const opcaoExiste = [...seletor.options].some(o => o.value === String(valorAtual));
+  seletor.value     = opcaoExiste ? valorAtual : 'todas';
+  areaFiltroReservas = seletor.value;
 }
 
 // Atualiza o <select> de área no modal de reserva
@@ -796,11 +841,19 @@ async function reativarAreaComum(id) {
 // ──────────────── RESERVAS ──────────────────
 // ═══════════════════════════════════════════════
 
-// Abre modal de reserva pré-selecionando a área
-function abrirModalReserva(idArea, nomeArea) {
+// Abre modal de reserva pré-selecionando área, data e período (quando vindos da grade)
+function abrirModalReserva(idArea, nomeArea, dataStr, periodoValor) {
+  definirLimitesDataReserva();
+
   const seletor = document.getElementById('selecionar-area-reserva');
-  if (seletor) seletor.value = idArea;
-  definirLabelSemana();
+  if (seletor && idArea) seletor.value = idArea;
+
+  const campoData = document.getElementById('data-reserva');
+  if (campoData && dataStr) campoData.value = dataStr;
+
+  const campoPeriodo = document.getElementById('periodo-reserva');
+  if (campoPeriodo && periodoValor) campoPeriodo.value = periodoValor;
+
   abrirModal('modal-reservar');
 }
 
@@ -829,13 +882,13 @@ async function confirmarReserva() {
   const dataInicio = `${dataStr}T${horaInicio}:00`;
   const dataFim    = `${dataStr}T${horaFim}:00`;
 
-  // Valida semana corrente
+  // Valida que a reserva está dentro dos próximos 7 dias
   const hoje            = new Date();
   const dataSelecionada = new Date(dataInicio);
   const diferencaDias   = (dataSelecionada - hoje) / (1000 * 60 * 60 * 24);
 
   if (diferencaDias > 7 || diferencaDias < -1) {
-    mostrarToast('Só é possível reservar dentro da semana corrente');
+    mostrarToast('Só é possível reservar dentro dos próximos 7 dias');
     return;
   }
 
@@ -868,44 +921,47 @@ async function confirmarReserva() {
   }
 }
 
-// Carrega e renderiza a tabela de reservas da semana
+// Carrega e renderiza a tabela de reservas dos próximos dias
 async function carregarReservasSemana() {
   const container = document.getElementById('container-grade-reservas');
   if (!container) return;
 
   try {
     const reservas = await reservaApi.listar();
+    reservasSemanaCache = reservas;
     renderizarGradeReservas(reservas);
   } catch (erro) {
     console.error('Erro ao carregar reservas:', erro);
   }
 }
 
-// Renderiza a grade de reservas dinamicamente
+// Renderiza a grade de reservas a partir de hoje (próximos 7 dias)
 function renderizarGradeReservas(reservas) {
-  const hoje         = new Date();
-  const diaSemana    = hoje.getDay();
-  const difSegunda   = diaSemana === 0 ? -6 : 1 - diaSemana;
-  const segunda      = new Date(hoje);
-  segunda.setDate(hoje.getDate() + difSegunda);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-  const diasSemana   = [];
+  const dias = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(segunda);
-    d.setDate(segunda.getDate() + i);
-    diasSemana.push(d);
+    const d = new Date(hoje);
+    d.setDate(hoje.getDate() + i);
+    dias.push(d);
   }
 
-  const nomeDias     = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  const periodos     = [
-    { rotulo: '08h–12h', inicio: 8,  fim: 12 },
-    { rotulo: '13h–18h', inicio: 13, fim: 18 },
-    { rotulo: '19h–23h', inicio: 19, fim: 23 },
+  const nomeDiasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const periodos       = [
+    { rotulo: '08h–12h', inicio: 8,  fim: 12, valor: '08:00-12:00' },
+    { rotulo: '13h–18h', inicio: 13, fim: 18, valor: '13:00-18:00' },
+    { rotulo: '19h–23h', inicio: 19, fim: 23, valor: '19:00-23:00' },
   ];
+
+  // Filtra pela área selecionada no <select> de filtro (quando aplicável)
+  const reservasFiltradas = areaFiltroReservas === 'todas'
+    ? reservas
+    : reservas.filter(r => String(r.areaComum?.id) === String(areaFiltroReservas));
 
   // Monta índice de reservas por dia+período
   const reservasPorCelula = {};
-  reservas.forEach(r => {
+  reservasFiltradas.forEach(r => {
     const dataInicio = new Date(r.dataInicio);
     const chave      = `${dataInicio.toDateString()}-${dataInicio.getHours()}`;
     reservasPorCelula[chave] = r;
@@ -915,15 +971,16 @@ function renderizarGradeReservas(reservas) {
 
   // Cabeçalho
   html += '<div class="celula-reserva cabecalho"></div>';
-  diasSemana.forEach((dia, i) => {
+  dias.forEach(dia => {
     const diaNum = String(dia.getDate()).padStart(2, '0');
-    html += `<div class="celula-reserva cabecalho">${nomeDias[i]} ${diaNum}</div>`;
+    const mesNum = String(dia.getMonth() + 1).padStart(2, '0');
+    html += `<div class="celula-reserva cabecalho">${nomeDiasSemana[dia.getDay()]} ${diaNum}/${mesNum}</div>`;
   });
 
   // Linhas por período
   periodos.forEach(periodo => {
     html += `<div class="celula-reserva rotulo-hora">${periodo.rotulo}</div>`;
-    diasSemana.forEach(dia => {
+    dias.forEach(dia => {
       const chave   = `${dia.toDateString()}-${periodo.inicio}`;
       const reserva = reservasPorCelula[chave];
 
@@ -934,8 +991,11 @@ function renderizarGradeReservas(reservas) {
                    ${nomeUsuario.split(' ')[0]}<br/>${nomeArea}
                  </div>`;
       } else {
+        // Pré-preenche data e período do slot clicado; mantém a área filtrada, se houver
+        const dataStr     = formatarDataISO(dia);
+        const idAreaAtual = areaFiltroReservas !== 'todas' ? `'${areaFiltroReservas}'` : 'null';
         html += `<div class="celula-reserva disponivel"
-                      onclick="abrirModalReserva('','')">+</div>`;
+                      onclick="abrirModalReserva(${idAreaAtual}, null, '${dataStr}', '${periodo.valor}')">+</div>`;
       }
     });
   });
@@ -944,34 +1004,52 @@ function renderizarGradeReservas(reservas) {
   document.getElementById('container-grade-reservas').innerHTML = html;
 }
 
-// ═══════════════════════════════════════════════
-// LABEL DA SEMANA E LIMITES DO INPUT DE DATA
-// ═══════════════════════════════════════════════
-function definirLabelSemana() {
-  const hoje      = new Date();
-  const diaSemana = hoje.getDay();
+// Aplica o filtro de área selecionado na grade de "Reservas da semana"
+function filtrarAreaReservas(valor) {
+  areaFiltroReservas = valor;
+  renderizarGradeReservas(reservasSemanaCache);
+}
 
-  const difSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
-  const segunda    = new Date(hoje);
-  segunda.setDate(hoje.getDate() + difSegunda);
+// ═══════════════════════════════════════════════
+// LABEL DO PERÍODO E LIMITES DO INPUT DE DATA
+// ═══════════════════════════════════════════════
 
-  const domingo = new Date(segunda);
-  domingo.setDate(segunda.getDate() + 6);
+// Formata uma data como YYYY-MM-DD respeitando o horário local (evita
+// deslocamento de dia causado por toISOString(), que usa UTC)
+function formatarDataISO(d) {
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+// Define o rótulo do período (hoje até hoje+6) e os limites do input de data
+function definirLimitesDataReserva() {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const fim = new Date(hoje);
+  fim.setDate(hoje.getDate() + 6);
 
   const formatar = d =>
     `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
 
   const elRotulo = document.getElementById('rotulo-semana');
-  if (elRotulo) elRotulo.textContent = `${formatar(segunda)} a ${formatar(domingo)}`;
+  if (elRotulo) elRotulo.textContent = `${formatar(hoje)} a ${formatar(fim)}`;
 
   const campoData = document.getElementById('data-reserva');
   if (campoData) {
-    const hojeStr    = hoje.toISOString().split('T')[0];
-    const domingoStr = domingo.toISOString().split('T')[0];
-    campoData.min    = hojeStr;
-    campoData.max    = domingoStr;
-    campoData.value  = hojeStr;
+    const hojeStr = formatarDataISO(hoje);
+    const fimStr  = formatarDataISO(fim);
+    campoData.min   = hojeStr;
+    campoData.max   = fimStr;
+    campoData.value = hojeStr;
   }
+}
+
+// Compatibilidade com chamadas antigas
+function definirLabelSemana() {
+  definirLimitesDataReserva();
 }
 
 // ═══════════════════════════════════════════════
@@ -1025,6 +1103,8 @@ Object.assign(window, {
   definirAreaReserva,
   confirmarReserva,
   definirLabelSemana,
+  definirLimitesDataReserva,
+  filtrarAreaReservas,
 });
 
 // ═══════════════════════════════════════════════

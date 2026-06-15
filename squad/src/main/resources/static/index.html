@@ -317,8 +317,8 @@
           </svg>
         </div>
         <div>
-          <h1 style="font-size:19px;font-weight:700;letter-spacing:-0.4px;">Residencial Palmeiras</h1>
-          <p style="font-size:12px;color:var(--texto-suave);">Última atualização: 28 de maio de 2026</p>
+          <h1 id="nome-condominio-wiki" style="font-size:19px;font-weight:700;letter-spacing:-0.4px;">Carregando...</h1>
+          <p id="data-atualizacao-wiki" style="font-size:12px;color:var(--texto-suave);">—</p>
         </div>
       </div>
 
@@ -409,10 +409,10 @@
           <p style="font-size:14px;color:var(--texto-secundario);">
             Semana de <strong id="rotulo-semana">09/06 a 15/06</strong>
           </p>
-          <select class="campo-select" style="width:180px;font-size:14px;padding:0.5rem 2.5rem 0.5rem 0.75rem;">
-            <option>Todas as áreas</option>
-            <option>Salão de Festas</option>
-            <option>Piscina</option>
+          <select class="campo-select" id="filtro-area-reservas"
+                  style="width:180px;font-size:14px;padding:0.5rem 2.5rem 0.5rem 0.75rem;"
+                  onchange="filtrarAreaReservas(this.value)">
+            <option value="todas">Todas as áreas</option>
           </select>
         </div>
 

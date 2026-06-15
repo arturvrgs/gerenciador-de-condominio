@@ -59,6 +59,7 @@ public class PostagemService {
         existente.setDescricao(postagem.getDescricao());
         existente.setUrlImagem(postagem.getUrlImagem());
         existente.setTag(postagem.getTag());
+        existente.setQtdeUpvotes(postagem.getQtdeUpvotes());
 
         repository.save(existente);
 
@@ -108,5 +109,20 @@ public class PostagemService {
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+    }
+
+    @Transactional
+    public ResponseEntity<Postagem> alternarUpvote(Long id, boolean incrementar) {
+        if (!repository.existsById(id)) {
+            throw new RuntimeException("Postagem não encontrada!");
+        }
+
+        if (incrementar) {
+            repository.incrementarUpvote(id);
+        } else {
+            repository.decrementarUpvote(id);
+        }
+
+        return ResponseEntity.ok(repository.findById(id).orElseThrow());
     }
 }
