@@ -708,3 +708,29 @@ body {
 
   .btn-acao-topo { display: inline-flex !important; }
 }
+
+/* ═══════════════════════════════════════════════
+   BADGES DE ESTADO — ÁREA COMUM
+═══════════════════════════════════════════════ */
+.badge-disponivel {
+  background: #F0FDF4;
+  color: var(--verde);
+  font-weight: 500;
+}
+
+.badge-reservada {
+  background: #FFFBEB;
+  color: var(--amarelo);
+  font-weight: 500;
+}
+
+.badge-suspensa {
+  background: #FEF2F2;
+  color: var(--vermelho);
+  font-weight: 500;
+}
+
+/* Margem inferior entre cards de área */
+.card-area {
+  margin-bottom: 10px;
+}

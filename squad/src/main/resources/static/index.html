@@ -179,7 +179,7 @@
       <div style="display:flex;align-items:center;gap:8px;">
         <button class="btn-primario btn-acao-topo"
                 style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
-                onclick="abrirModal('modal-nova-ocorrencia')">
+                onclick="abrirModalCriarOcorrencia()">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nova
         </button>
@@ -277,7 +277,7 @@
     </div>
 
     <!-- FAB nova ocorrência -->
-    <button class="btn-flutuante" id="fab-ocorrencias" onclick="abrirModal('modal-nova-ocorrencia')">
+    <button class="btn-flutuante" id="fab-ocorrencias" onclick="abrirModalCriarOcorrencia()">
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
@@ -292,7 +292,7 @@
         <!-- Editar wiki — somente síndico, visível no desktop -->
         <button class="btn-primario btn-acao-topo" id="btn-editar-wiki"
                 style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
-                onclick="abrirModal('modal-editar-wiki')">
+                onclick="abrirModalEditarWiki()">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -324,7 +324,7 @@
 
       <!-- Botão editar wiki mobile — síndico -->
       <button class="btn-secundario" id="btn-editar-wiki-mobile" style="width:100%;margin-bottom:1.25rem;"
-              onclick="abrirModal('modal-editar-wiki')">
+              onclick="abrirModalEditarWiki()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -368,7 +368,7 @@
       <div style="display:flex;align-items:center;gap:8px;">
         <button class="btn-primario btn-acao-topo" id="btn-nova-area"
                 style="display:none;font-size:14px;min-height:40px;padding:0.5rem 1rem;"
-                onclick="abrirModal('modal-nova-area')">
+                onclick="abrirModalCriarArea()">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nova área
         </button>
@@ -391,91 +391,13 @@
 
         <!-- Botão nova área — mobile síndico -->
         <button class="btn-primario" id="btn-nova-area-mobile" style="width:100%;margin-bottom:1rem;"
-                onclick="abrirModal('modal-nova-area')">
+                onclick="abrirModalCriarArea()">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nova área comum
         </button>
 
-        <!-- Card de área — ativa -->
-        <div class="card-area" id="area-salao">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="indicador-status status-verde"></div>
-              <span style="font-size:16px;font-weight:600;">Salão de Festas</span>
-            </div>
-            <span style="font-size:11px;color:var(--verde);font-weight:500;background:#F0FDF4;
-                         padding:3px 9px;border-radius:20px;">Ativa</span>
-          </div>
-          <p style="font-size:13px;color:var(--texto-secundario);line-height:1.5;margin-bottom:12px;">
-            Capacidade para 80 pessoas. Das 08h às 23h. Cozinha equipada e sistema de som.
-          </p>
-          <!-- Ações — scroll horizontal no mobile se necessário -->
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn-primario" style="font-size:13px;min-height:40px;padding:0.5rem 1rem;flex:1;"
-                    onclick="abrirModal('modal-reservar');definirAreaReserva('Salão de Festas')">
-              Reservar
-            </button>
-            <button class="btn-secundario" style="font-size:13px;min-height:40px;" id="acao-editar-area-salao"
-                    onclick="abrirModal('modal-editar-area')">Editar</button>
-            <button class="btn-fantasma" style="font-size:13px;color:var(--amarelo);min-height:40px;"
-                    id="acao-suspender-area-salao"
-                    onclick="suspenderArea('area-salao',this)">Suspender</button>
-            <button class="btn-perigo" id="acao-excluir-area-salao"
-                    onclick="excluirArea('area-salao')">Excluir</button>
-          </div>
-        </div>
-
-        <!-- Card de área — ativa -->
-        <div class="card-area" id="area-piscina">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="indicador-status status-verde"></div>
-              <span style="font-size:16px;font-weight:600;">Piscina</span>
-            </div>
-            <span style="font-size:11px;color:var(--verde);font-weight:500;background:#F0FDF4;
-                         padding:3px 9px;border-radius:20px;">Ativa</span>
-          </div>
-          <p style="font-size:13px;color:var(--texto-secundario);line-height:1.5;margin-bottom:12px;">
-            Piscina adulto e infantil. Das 07h às 22h. Menores precisam de acompanhante.
-          </p>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn-primario" style="font-size:13px;min-height:40px;padding:0.5rem 1rem;flex:1;"
-                    onclick="abrirModal('modal-reservar');definirAreaReserva('Piscina')">
-              Reservar
-            </button>
-            <button class="btn-secundario" style="font-size:13px;min-height:40px;"
-                    id="acao-editar-area-piscina">Editar</button>
-            <button class="btn-fantasma" style="font-size:13px;color:var(--amarelo);min-height:40px;"
-                    id="acao-suspender-area-piscina"
-                    onclick="suspenderArea('area-piscina',this)">Suspender</button>
-            <button class="btn-perigo" id="acao-excluir-area-piscina"
-                    onclick="excluirArea('area-piscina')">Excluir</button>
-          </div>
-        </div>
-
-        <!-- Card de área — suspensa -->
-        <div class="card-area suspensa" id="area-academia">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="indicador-status status-vermelho"></div>
-              <span style="font-size:16px;font-weight:600;">Academia</span>
-            </div>
-            <span style="font-size:11px;color:var(--vermelho);font-weight:500;background:#FEF2F2;
-                         padding:3px 9px;border-radius:20px;">Suspensa</span>
-          </div>
-          <p style="font-size:13px;color:var(--texto-secundario);line-height:1.5;margin-bottom:12px;">
-            Em manutenção. Previsão de reabertura: 15/06. Equipamentos em revisão técnica.
-          </p>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn-secundario" style="font-size:13px;min-height:40px;flex:1;" disabled>
-              Indisponível
-            </button>
-            <button class="btn-fantasma" style="font-size:13px;color:var(--verde);min-height:40px;"
-                    id="acao-reativar-area-academia"
-                    onclick="reativarArea('area-academia',this)">Reativar</button>
-            <button class="btn-perigo" id="acao-excluir-area-academia"
-                    onclick="excluirArea('area-academia')">Excluir</button>
-          </div>
+        <!-- Lista dinâmica de áreas — preenchida via carregarAreasComuns() -->
+        <div id="lista-areas"><!-- Preenchido pelo app.js -->
         </div>
 
       </div>
@@ -494,45 +416,10 @@
           </select>
         </div>
 
-        <!-- Grade com scroll horizontal no mobile -->
+        <!-- Grade dinâmica de reservas — preenchida via carregarReservasSemana() -->
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--borda);">
-          <div class="grade-reservas">
-            <!-- Cabeçalho -->
-            <div class="celula-reserva cabecalho"></div>
-            <div class="celula-reserva cabecalho">Seg 09</div>
-            <div class="celula-reserva cabecalho">Ter 10</div>
-            <div class="celula-reserva cabecalho">Qua 11</div>
-            <div class="celula-reserva cabecalho">Qui 12</div>
-            <div class="celula-reserva cabecalho">Sex 13</div>
-            <div class="celula-reserva cabecalho">Sáb 14</div>
-            <div class="celula-reserva cabecalho">Dom 15</div>
-            <!-- Manhã -->
-            <div class="celula-reserva rotulo-hora">08h–12h</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva ocupada">Maria S.<br/>Piscina</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva ocupada">João L.<br/>Salão</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <!-- Tarde -->
-            <div class="celula-reserva rotulo-hora">13h–18h</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva ocupada">Gabriel L.<br/>Salão</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva ocupada">Ana R.<br/>Piscina</div>
-            <div class="celula-reserva ocupada">João L.<br/>Piscina</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <!-- Noite -->
-            <div class="celula-reserva rotulo-hora">19h–23h</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva ocupada">Maria S.<br/>Salão</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
-            <div class="celula-reserva ocupada">Carlos M.<br/>Salão</div>
-            <div class="celula-reserva disponivel" onclick="abrirModal('modal-reservar')">+</div>
+          <div id="container-grade-reservas">
+            <!-- Preenchido dinamicamente pelo app.js -->
           </div>
         </div>
 
@@ -657,50 +544,55 @@
   <div class="caixa-modal">
     <div class="alca-modal"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-      <h2 style="font-size:18px;font-weight:700;">Nova ocorrência</h2>
-      <button class="btn-fantasma" onclick="fecharModal('modal-nova-ocorrencia')" style="padding:0.35rem;">
+      <h2 id="titulo-modal-ocorrencia" style="font-size:18px;font-weight:700;">Nova ocorrência</h2>
+      <button type="button" class="btn-fantasma" onclick="fecharModalOcorrencia()" style="padding:0.35rem;">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div>
-        <label class="rotulo-campo">Título</label>
-        <input class="campo-input" type="text" placeholder="Ex: Barulho no corredor" />
-      </div>
-      <div>
-        <label class="rotulo-campo">Descrição</label>
-        <textarea class="campo-textarea" placeholder="Descreva a ocorrência com detalhes..."></textarea>
-      </div>
-      <div>
-        <label class="rotulo-campo">Tipo</label>
-        <select class="campo-select">
-          <option>Reclamação</option>
-          <option>Elogio</option>
-        </select>
-      </div>
-      <div>
-        <label class="rotulo-campo">Foto (opcional)</label>
-        <div style="border:1.5px dashed var(--borda);border-radius:10px;padding:1.25rem;
-                    text-align:center;cursor:pointer;min-height:80px;display:flex;
-                    flex-direction:column;align-items:center;justify-content:center;"
-             onclick="document.getElementById('upload-ocorrencia').click()">
-          <svg width="20" height="20" fill="none" stroke="var(--texto-suave)" stroke-width="1.75"
-               viewBox="0 0 24 24" style="margin-bottom:6px;">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          <p style="font-size:13px;color:var(--texto-suave);">Toque para adicionar imagem</p>
-          <input type="file" id="upload-ocorrencia" accept="image/*" style="display:none;" />
+    <form id="form-nova-ocorrencia" onsubmit="handleNovaOcorrencia(event)">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label class="rotulo-campo" for="ocorrencia-titulo">Título</label>
+          <input class="campo-input" id="ocorrencia-titulo" name="titulo"
+                 type="text" placeholder="Ex: Barulho no corredor" required />
+        </div>
+        <div>
+          <label class="rotulo-campo" for="ocorrencia-descricao">Descrição</label>
+          <textarea class="campo-textarea" id="ocorrencia-descricao" name="descricao"
+                    placeholder="Descreva a ocorrência com detalhes..." required></textarea>
+        </div>
+        <div>
+          <label class="rotulo-campo" for="ocorrencia-tag">Tipo</label>
+          <select class="campo-select" id="ocorrencia-tag" name="tag">
+            <option value="RECLAMACAO">Reclamação</option>
+            <option value="ELOGIO">Elogio</option>
+          </select>
+        </div>
+        <div>
+          <label class="rotulo-campo">Foto (opcional)</label>
+          <div style="border:1.5px dashed var(--borda);border-radius:10px;padding:1.25rem;
+                      text-align:center;cursor:pointer;min-height:80px;display:flex;
+                      flex-direction:column;align-items:center;justify-content:center;"
+               onclick="document.getElementById('upload-ocorrencia').click()">
+            <svg width="20" height="20" fill="none" stroke="var(--texto-suave)" stroke-width="1.75"
+                 viewBox="0 0 24 24" style="margin-bottom:6px;">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p style="font-size:13px;color:var(--texto-suave);">Toque para adicionar imagem</p>
+            <input type="file" id="upload-ocorrencia" name="foto" accept="image/*" style="display:none;" />
+          </div>
         </div>
       </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:1.5rem;">
-      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-nova-ocorrencia')">Cancelar</button>
-      <button class="btn-primario" style="flex:2;" onclick="enviarOcorrencia()">Registrar</button>
-    </div>
+      <div style="display:flex;gap:8px;margin-top:1.5rem;">
+        <button type="button" class="btn-secundario" style="flex:1;"
+                onclick="fecharModalOcorrencia()">Cancelar</button>
+        <button id="btn-modal-ocorrencia" type="submit" class="btn-primario" style="flex:2;">Registrar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -710,7 +602,7 @@
     <div class="alca-modal"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
       <h2 style="font-size:18px;font-weight:700;">Editar Wiki</h2>
-      <button class="btn-fantasma" onclick="fecharModal('modal-editar-wiki')" style="padding:0.35rem;">
+      <button type="button" class="btn-fantasma" onclick="fecharModal('modal-editar-wiki')" style="padding:0.35rem;">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
@@ -718,64 +610,59 @@
     </div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div>
-        <label class="rotulo-campo">Nome do condomínio</label>
-        <input class="campo-input" type="text" value="Residencial Palmeiras" />
+        <label class="rotulo-campo" for="wiki-nome-input">Nome do condomínio</label>
+        <input class="campo-input" id="wiki-nome-input" type="text" placeholder="Ex: Residencial Palmeiras" />
       </div>
       <div>
-        <label class="rotulo-campo">Conteúdo</label>
-        <textarea class="campo-textarea" style="min-height:160px;"
-                  placeholder="Informações do condomínio...">Condomínio localizado em Itajaí — SC. Fundado em 2010. 4 blocos, 120 unidades.</textarea>
+        <label class="rotulo-campo" for="wiki-descricao-input">Descrição</label>
+        <textarea class="campo-textarea" id="wiki-descricao-input" style="min-height:160px;"
+                  placeholder="Informações do condomínio..."></textarea>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:1.5rem;">
-      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-editar-wiki')">Cancelar</button>
-      <button class="btn-primario" style="flex:2;"
-              onclick="fecharModal('modal-editar-wiki');mostrarToast('Wiki atualizada com sucesso')">
+      <button type="button" class="btn-secundario" style="flex:1;"
+              onclick="fecharModal('modal-editar-wiki')">Cancelar</button>
+      <button type="button" class="btn-primario" style="flex:2;" onclick="handleSalvarWiki()">
         Salvar
       </button>
     </div>
   </div>
 </div>
 
-<!-- Modal: Nova área comum -->
+<!-- Modal: Nova / Editar área comum -->
 <div class="fundo-modal" id="modal-nova-area" onclick="fecharModalFora(event,'modal-nova-area')">
   <div class="caixa-modal">
     <div class="alca-modal"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-      <h2 style="font-size:18px;font-weight:700;">Nova área comum</h2>
-      <button class="btn-fantasma" onclick="fecharModal('modal-nova-area')" style="padding:0.35rem;">
+      <h2 id="titulo-modal-area" style="font-size:18px;font-weight:700;">Nova área comum</h2>
+      <button type="button" class="btn-fantasma" onclick="fecharModalArea()" style="padding:0.35rem;">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div>
-        <label class="rotulo-campo">Nome da área</label>
-        <input class="campo-input" type="text" placeholder="Ex: Churrasqueira" />
-      </div>
-      <div>
-        <label class="rotulo-campo">Descrição</label>
-        <textarea class="campo-textarea" placeholder="Capacidade, horários, regras de uso..."></textarea>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <form id="form-area" onsubmit="handleSalvarArea(event)">
+      <div style="display:flex;flex-direction:column;gap:14px;">
         <div>
-          <label class="rotulo-campo">Abre às</label>
-          <input class="campo-input" type="time" value="08:00" />
+          <label class="rotulo-campo" for="area-nome">Nome da área</label>
+          <input class="campo-input" id="area-nome" name="nome"
+                 type="text" placeholder="Ex: Churrasqueira" required />
         </div>
         <div>
-          <label class="rotulo-campo">Fecha às</label>
-          <input class="campo-input" type="time" value="22:00" />
+          <label class="rotulo-campo" for="area-estado">Estado</label>
+          <select class="campo-select" id="area-estado" name="estado">
+            <option value="DISPONIVEL">Disponível</option>
+            <option value="RESERVADA">Reservada</option>
+            <option value="SUSPENSA">Suspensa</option>
+          </select>
         </div>
       </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:1.5rem;">
-      <button class="btn-secundario" style="flex:1;" onclick="fecharModal('modal-nova-area')">Cancelar</button>
-      <button class="btn-primario" style="flex:2;"
-              onclick="fecharModal('modal-nova-area');mostrarToast('Área criada com sucesso')">
-        Criar área
-      </button>
-    </div>
+      <div style="display:flex;gap:8px;margin-top:1.5rem;">
+        <button type="button" class="btn-secundario" style="flex:1;"
+                onclick="fecharModalArea()">Cancelar</button>
+        <button id="btn-modal-area" type="submit" class="btn-primario" style="flex:2;">Criar área</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -837,10 +724,10 @@
       </div>
       <div>
         <label class="rotulo-campo">Período</label>
-        <select class="campo-select">
-          <option>Manhã (08h – 12h)</option>
-          <option>Tarde (13h – 18h)</option>
-          <option>Noite (19h – 23h)</option>
+        <select class="campo-select" id="periodo-reserva">
+          <option value="08:00-12:00">Manhã (08h – 12h)</option>
+          <option value="13:00-18:00">Tarde (13h – 18h)</option>
+          <option value="19:00-23:00">Noite (19h – 23h)</option>
         </select>
       </div>
       <!-- Aviso sobre regra de reserva -->

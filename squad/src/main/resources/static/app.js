@@ -1,21 +1,43 @@
 import { CardPostagemForum } from './componentes/CardPostagemForum.js';
-import { postagemApi } from './api/postagem.js';
+import { CardOcorrencia }    from './componentes/CardOcorrencia.js';
+import { CardAreaComum }     from './componentes/CardAreaComum.js';
+import { postagemApi }       from './api/postagem.js';
+import { areaComumApi }      from './api/areacomum.js';
+import { reservaApi }        from './api/reserva.js';
+import { wikiApi }           from './api/wiki.js';
 
 // ═══════════════════════════════════════════════
-// ESTADO DO USUÁRIO ATUAL
+// ESTADO GLOBAL
 // ═══════════════════════════════════════════════
+
+// Usuário logado no momento
 let usuarioAtual = {
-  id: 1,
-  nome: 'Artur Vargas',
-  perfil: 'sindico', /* 'sindico' ou 'morador' */
-  iniciais: 'A'
+  id:       1,
+  nome:     'Artur Vargas',
+  perfil:   'sindico', // 'sindico' ou 'morador'
+  iniciais: 'A',
 };
 
-// ═══════════════════════════════════════════════
-// ESTADO DO FÓRUM (cache + modo edição)
-// ═══════════════════════════════════════════════
-let postagensCache = {};
-let editandoPostagemId = null;
+// Cache de postagens do fórum para edição inline
+let postagensForumCache = {};
+
+// Id da postagem sendo editada no fórum (null = criação)
+let editandoPostagemForumId = null;
+
+// Cache de ocorrências para edição inline
+let ocorrenciasCache = {};
+
+// Id da ocorrência sendo editada (null = criação)
+let editandoOcorrenciaId = null;
+
+// Cache de áreas comuns
+let areasCache = {};
+
+// Id da área sendo editada (null = criação)
+let editandoAreaId = null;
+
+// Id da wiki atual (existe somente uma por condomínio)
+let wikiId = null;
 
 // ═══════════════════════════════════════════════
 // MÁSCARA DE CPF
@@ -38,17 +60,23 @@ function realizarLogin() {
     mostrarToast('Preencha CPF e senha');
     return;
   }
+  // TODO: integrar endpoint de autenticação quando implementado
   entrarComo('sindico');
 }
 
 function entrarComo(perfil) {
   if (perfil === 'sindico') {
-    usuarioAtual = { nome: 'Artur Vargas', perfil: 'sindico', iniciais: 'A', id: 1 };
+    usuarioAtual = { id: 1, nome: 'Artur Vargas',   perfil: 'sindico', iniciais: 'A' };
   } else {
-    usuarioAtual = { nome: 'Gabriel Lacerda', perfil: 'morador', iniciais: 'G' };
+    usuarioAtual = { id: 2, nome: 'Gabriel Lacerda', perfil: 'morador', iniciais: 'G' };
   }
   aplicarPermissoesDePerfil();
   trocarTela('tela-app');
+  // Carrega dados ao entrar
+  carregarForum();
+  carregarOcorrencias();
+  carregarAreasComuns();
+  carregarWiki();
 }
 
 function realizarLogout() {
@@ -66,21 +94,24 @@ function abrirModalEsqueciSenha() {
 function aplicarPermissoesDePerfil() {
   const ehSindico = usuarioAtual.perfil === 'sindico';
 
-  ['forum','ocorrencias','wiki','areas'].forEach(pagina => {
+  // Atualiza avatares de topo em todas as páginas
+  ['forum', 'ocorrencias', 'wiki', 'areas'].forEach(pagina => {
     const elAvatar = document.getElementById('avatar-topo-' + pagina);
     if (elAvatar) elAvatar.textContent = usuarioAtual.iniciais;
   });
 
+  // Atualiza sidebar desktop
   const elAvatarSidebar = document.getElementById('avatar-sidebar');
   const elNomeSidebar   = document.getElementById('nome-sidebar');
   const elBadgeSidebar  = document.getElementById('badge-sidebar');
   if (elAvatarSidebar) elAvatarSidebar.textContent = usuarioAtual.iniciais;
   if (elNomeSidebar)   elNomeSidebar.textContent   = usuarioAtual.nome;
   if (elBadgeSidebar) {
-    elBadgeSidebar.textContent  = ehSindico ? 'SÍNDICO' : 'MORADOR';
-    elBadgeSidebar.className    = ehSindico ? 'badge-sindico' : 'badge-morador';
+    elBadgeSidebar.textContent = ehSindico ? 'SÍNDICO' : 'MORADOR';
+    elBadgeSidebar.className   = ehSindico ? 'badge-sindico' : 'badge-morador';
   }
 
+  // Botões exclusivos do síndico
   const botoesSindico = [
     'btn-novo-aviso',
     'btn-editar-wiki',
@@ -89,44 +120,18 @@ function aplicarPermissoesDePerfil() {
     'btn-nova-area-mobile',
     'fab-forum',
   ];
-
   botoesSindico.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = ehSindico ? '' : 'none';
   });
 
-  const acoesAdminArea = [
-    'acao-editar-area-salao','acao-suspender-area-salao','acao-excluir-area-salao',
-    'acao-editar-area-piscina','acao-suspender-area-piscina','acao-excluir-area-piscina',
-    'acao-reativar-area-academia','acao-excluir-area-academia',
-  ];
-
-  acoesAdminArea.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = ehSindico ? '' : 'none';
-  });
-
-  ['acoes-forum-1','acoes-forum-2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = ehSindico ? '' : 'none';
-  });
-
-  const acoesPropriosMorador = document.querySelectorAll('.acoes-proprio');
-  acoesPropriosMorador.forEach(el => {
-    const cardPai = el.closest('[data-proprio]');
-    if (ehSindico) {
-      el.style.display = 'flex';
-    } else {
-      el.style.display = (cardPai && cardPai.dataset.proprio === 'true') ? 'flex' : 'none';
-    }
-  });
-
+  // FAB de ocorrências é visível para todos
   const fabOcorrencias = document.getElementById('fab-ocorrencias');
   if (fabOcorrencias) fabOcorrencias.style.display = '';
 }
 
 // ═══════════════════════════════════════════════
-// TROCA DE TELAS (login ↔ app)
+// TROCA DE TELA (login ↔ app)
 // ═══════════════════════════════════════════════
 function trocarTela(idTela) {
   document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
@@ -146,7 +151,7 @@ function mostrarPagina(pagina) {
 
   document.querySelectorAll('.item-nav-sidebar').forEach(n => {
     n.style.background = 'none';
-    n.style.color = 'var(--texto-secundario)';
+    n.style.color      = 'var(--texto-secundario)';
   });
   const sidebarItem = document.getElementById('sidebar-' + pagina);
   if (sidebarItem) {
@@ -158,14 +163,16 @@ function mostrarPagina(pagina) {
 }
 
 // ═══════════════════════════════════════════════
-// ABAS
+// ABAS (Áreas Comuns)
 // ═══════════════════════════════════════════════
 function trocarAba(botao, idAba) {
   botao.closest('.barra-abas').querySelectorAll('.btn-aba').forEach(b => b.classList.remove('ativo'));
   botao.classList.add('ativo');
+  document.getElementById('aba-lista').style.display    = idAba === 'aba-lista'    ? '' : 'none';
+  document.getElementById('aba-reservas').style.display = idAba === 'aba-reservas' ? '' : 'none';
 
-  document.getElementById('aba-lista').style.display     = idAba === 'aba-lista'    ? '' : 'none';
-  document.getElementById('aba-reservas').style.display  = idAba === 'aba-reservas' ? '' : 'none';
+  // Carrega reservas ao acessar a aba
+  if (idAba === 'aba-reservas') carregarReservasSemana();
 }
 
 // ═══════════════════════════════════════════════
@@ -191,10 +198,10 @@ function fecharModalFora(evento, id) {
 function abrirDrawerPerfil() {
   const ehSindico = usuarioAtual.perfil === 'sindico';
 
-  document.getElementById('avatar-drawer').textContent  = usuarioAtual.iniciais;
-  document.getElementById('nome-drawer').textContent    = usuarioAtual.nome;
+  document.getElementById('avatar-drawer').textContent = usuarioAtual.iniciais;
+  document.getElementById('nome-drawer').textContent   = usuarioAtual.nome;
 
-  const elBadge    = document.getElementById('badge-drawer');
+  const elBadge       = document.getElementById('badge-drawer');
   elBadge.textContent = ehSindico ? 'SÍNDICO' : 'MORADOR';
   elBadge.className   = ehSindico ? 'badge-sindico' : 'badge-morador';
 
@@ -226,250 +233,727 @@ function mostrarToast(mensagem) {
 }
 
 // ═══════════════════════════════════════════════
-// VOTO POSITIVO (up vote com toggle)
+// ESTADO VAZIO GENÉRICO
 // ═══════════════════════════════════════════════
-function alternarVoto(botao) {
-  const elContador = botao.querySelector('span');
-  const estaAtivo  = botao.classList.toggle('ativo');
-  const contadorAtual = parseInt(elContador.textContent);
-  elContador.textContent = estaAtivo ? contadorAtual + 1 : contadorAtual - 1;
+function htmlEstadoVazio(mensagem) {
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;
+                text-align:center;padding-top:4rem;color:var(--texto-suave);">
+      <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 9h8"/><path d="M8 13h5"/>
+      </svg>
+      <p style="font-size:14px;font-weight:500;color:var(--texto-secundario);margin:0;">${mensagem}</p>
+    </div>
+  `;
 }
 
 // ═══════════════════════════════════════════════
-// EXCLUIR POST
+// ──────────────── FÓRUM ─────────────────────
 // ═══════════════════════════════════════════════
-async function excluirPost(botao) {
-  if (!confirm('Excluir esta publicação?')) return;
 
-  const card = botao.closest('.card-post');
-  const id = card.dataset.id;
-
+async function carregarForum() {
+  const container = document.getElementById('lista-forum');
   try {
-    await postagemApi.deletar(id);
-    card.remove();
-    await listarPostagensForum();
-    mostrarToast('Publicação excluída');
+    const postagens = await postagemApi.listarPorTipo('FORUM');
+    postagensForumCache = {};
+
+    if (!postagens || postagens.length === 0) {
+      container.innerHTML = htmlEstadoVazio('Não há avisos no fórum.');
+      return;
+    }
+
+    // Postagens com tag FIXADO vêm primeiro
+    const ordenadas = [...postagens].sort((a, b) => {
+      if (a.tag === 'FIXADO' && b.tag !== 'FIXADO') return -1;
+      if (b.tag === 'FIXADO' && a.tag !== 'FIXADO') return  1;
+      return 0;
+    });
+
+    container.innerHTML = '';
+    ordenadas.forEach(postagem => {
+      postagensForumCache[postagem.id] = postagem;
+      const card = new CardPostagemForum(postagem);
+      container.innerHTML += card.render();
+    });
   } catch (erro) {
-    console.error(erro);
-    mostrarToast('Erro ao excluir publicação');
+    console.error('Erro ao carregar fórum:', erro);
+    container.innerHTML = htmlEstadoVazio('Erro ao carregar avisos. Tente novamente.');
   }
 }
 
-// ═══════════════════════════════════════════════
-// FIXAR / DESAFIXAR POST (PIN)
-// ═══════════════════════════════════════════════
-function alternarPin(botao) {
-  const card     = botao.closest('.card-post');
-  const estaFixo = card.classList.toggle('fixado');
-  botao.textContent = estaFixo ? 'Desafixar' : 'Fixar';
-  mostrarToast(estaFixo ? 'Aviso fixado no topo' : 'Aviso desafixado');
-}
-
-// ═══════════════════════════════════════════════
-// ABRIR MODAL CRIAR AVISO (botão "Novo aviso" / FAB)
-// ═══════════════════════════════════════════════
+// Abre o modal de novo aviso (limpa estado de edição)
 function abrirModalCriarAviso() {
   document.getElementById('form-novo-aviso').reset();
-  document.getElementById('titulo-modal-aviso').textContent = 'Novo aviso';
-  document.getElementById('btn-modal-postagem').textContent = 'Publicar aviso';
-  editandoPostagemId = null;
+  document.getElementById('titulo-modal-aviso').textContent  = 'Novo aviso';
+  document.getElementById('btn-modal-postagem').textContent  = 'Publicar aviso';
+  editandoPostagemForumId = null;
   abrirModal('modal-novo-aviso');
 }
 
-// ═══════════════════════════════════════════════
-// FECHAR MODAL AVISO (reseta estado de edição)
-// ═══════════════════════════════════════════════
+// Fecha o modal de aviso e reseta estado
 function fecharModalAviso() {
-  editandoPostagemId = null;
+  editandoPostagemForumId = null;
   document.getElementById('titulo-modal-aviso').textContent = 'Novo aviso';
   document.getElementById('btn-modal-postagem').textContent = 'Publicar aviso';
   fecharModal('modal-novo-aviso');
 }
 
-// ═══════════════════════════════════════════════
-// EDITAR POST
-// ═══════════════════════════════════════════════
+// Clique no botão "Editar" de um post do fórum
 function editarPost(botao, tipo) {
-  if (tipo === 'forum') {
-    const card = botao.closest('.card-post');
-    const id = card.dataset.id;
-    const postagem = postagensCache[id];
+  if (tipo !== 'forum') return;
 
-    if (postagem) {
-      document.getElementById('aviso-titulo').value    = postagem.titulo;
-      document.getElementById('aviso-descricao').value = postagem.descricao;
-      document.getElementById('aviso-tag').value       = postagem.tag || 'NULA';
+  const card    = botao.closest('.card-post');
+  const id      = Number(card.dataset.id);
+  const postagem = postagensForumCache[id];
 
-      document.getElementById('titulo-modal-aviso').textContent = 'Editar aviso';
-      document.getElementById('btn-modal-postagem').textContent = 'Salvar alterações';
+  if (!postagem) return;
 
-      editandoPostagemId = id;
-    }
-    abrirModal('modal-novo-aviso');
-  } else {
-    abrirModal('modal-nova-ocorrencia');
-  }
+  document.getElementById('aviso-titulo').value    = postagem.titulo;
+  document.getElementById('aviso-descricao').value = postagem.descricao;
+  document.getElementById('aviso-tag').value       = postagem.tag || 'NULA';
+
+  document.getElementById('titulo-modal-aviso').textContent = 'Editar aviso';
+  document.getElementById('btn-modal-postagem').textContent = 'Salvar alterações';
+
+  editandoPostagemForumId = id;
+  abrirModal('modal-novo-aviso');
 }
 
-function handleNovaPostagemForum(event) {
-  event.preventDefault();
-  const form = event.target;
+// Submit do formulário de aviso (criar ou editar)
+function handleNovaPostagemForum(evento) {
+  evento.preventDefault();
+  const form = evento.target;
 
-  const dadosPostagem = {
-    titulo:     form.titulo.value.trim(),
-    descricao:  form.descricao.value.trim(),
-    tag:        form.tag.value,
-    urlImagem:  null,
-    tipoPost:   'FORUM',
-    usuario:    { id: usuarioAtual.id }
+  const dados = {
+    titulo:    form.titulo.value.trim(),
+    descricao: form.descricao.value.trim(),
+    tag:       form.tag.value,
+    urlImagem: null,
+    tipoPost:  'FORUM',
+    usuario:   { id: usuarioAtual.id },
   };
 
-  if (!dadosPostagem.titulo || !dadosPostagem.descricao) {
-    mostrarToast('Preencha todos os campos obrigatórios');
+  if (!dados.titulo || !dados.descricao) {
+    mostrarToast('Preencha título e descrição');
     return;
   }
 
-  if (editandoPostagemId !== null) {
-    atualizarPostagem(editandoPostagemId, dadosPostagem);
+  if (editandoPostagemForumId !== null) {
+    atualizarPostagemForum(editandoPostagemForumId, dados);
   } else {
-    criarPostagem(dadosPostagem);
+    criarPostagemForum(dados);
   }
 }
 
-// ═══════════════════════════════════════════════
-// CRIAR PUBLICAÇÃO NO FÓRUM
-// ═══════════════════════════════════════════════
-async function criarPostagem(novaPostagem) {
+async function criarPostagemForum(dados) {
   try {
-    await postagemApi.criar(novaPostagem);
+    await postagemApi.criar(dados);
     fecharModalAviso();
-    mostrarToast('Postagem publicada com sucesso');
-    await listarPostagensForum();
+    mostrarToast('Aviso publicado com sucesso');
+    await carregarForum();
   } catch (erro) {
-    console.error(erro);
-    mostrarToast('Erro ao publicar postagem');
+    console.error('Erro ao criar aviso:', erro);
+    mostrarToast('Erro ao publicar aviso');
   }
 }
 
-// ═══════════════════════════════════════════════
-// ATUALIZAR PUBLICAÇÃO NO FÓRUM
-// ═══════════════════════════════════════════════
-async function atualizarPostagem(id, postagem) {
+async function atualizarPostagemForum(id, dados) {
   try {
-    await postagemApi.atualizar(id, postagem);
+    await postagemApi.atualizar(id, dados);
     fecharModalAviso();
-    mostrarToast('Postagem atualizada com sucesso');
-    await listarPostagensForum();
+    mostrarToast('Aviso atualizado com sucesso');
+    await carregarForum();
   } catch (erro) {
-    console.error(erro);
-    mostrarToast('Erro ao atualizar postagem');
+    console.error('Erro ao atualizar aviso:', erro);
+    mostrarToast('Erro ao atualizar aviso');
+  }
+}
+
+// Excluir post do fórum
+async function excluirPost(botao) {
+  if (!confirm('Excluir esta publicação?')) return;
+
+  const card = botao.closest('.card-post');
+  const id   = Number(card.dataset.id);
+
+  try {
+    await postagemApi.deletar(id);
+    mostrarToast('Aviso excluído');
+    await carregarForum();
+  } catch (erro) {
+    console.error('Erro ao excluir aviso:', erro);
+    mostrarToast('Erro ao excluir aviso');
+  }
+}
+
+// Fixar / desafixar post (altera tag via API)
+async function alternarPin(botao) {
+  const card     = botao.closest('.card-post');
+  const id       = Number(card.dataset.id);
+  const postagem = postagensForumCache[id];
+  if (!postagem) return;
+
+  const novaTag = postagem.tag === 'FIXADO' ? 'NULA' : 'FIXADO';
+
+  try {
+    await postagemApi.atualizar(id, { ...postagem, tag: novaTag, usuario: { id: postagem.usuario.id } });
+    mostrarToast(novaTag === 'FIXADO' ? 'Aviso fixado no topo' : 'Aviso desafixado');
+    await carregarForum();
+  } catch (erro) {
+    console.error('Erro ao alterar pin:', erro);
+    mostrarToast('Erro ao alterar fixação');
   }
 }
 
 // ═══════════════════════════════════════════════
-// REGISTRAR OCORRÊNCIA
+// ──────────────── OCORRÊNCIAS ───────────────
 // ═══════════════════════════════════════════════
-function enviarOcorrencia() {
+
+async function carregarOcorrencias() {
+  const container = document.getElementById('lista-ocorrencias');
+  try {
+    const postagens = await postagemApi.listarPorTipo('OCORRENCIA');
+    ocorrenciasCache = {};
+
+    if (!postagens || postagens.length === 0) {
+      container.innerHTML = htmlEstadoVazio('Não há ocorrências registradas.');
+      return;
+    }
+
+    container.innerHTML = '';
+    postagens.forEach(postagem => {
+      ocorrenciasCache[postagem.id] = postagem;
+      const ehSindico = usuarioAtual.perfil === 'sindico';
+      const card = new CardOcorrencia(postagem, usuarioAtual.id, ehSindico);
+      container.innerHTML += card.render();
+    });
+  } catch (erro) {
+    console.error('Erro ao carregar ocorrências:', erro);
+    container.innerHTML = htmlEstadoVazio('Erro ao carregar ocorrências. Tente novamente.');
+  }
+}
+
+// Abre modal de criação de ocorrência
+function abrirModalCriarOcorrencia() {
+  document.getElementById('form-nova-ocorrencia').reset();
+  document.getElementById('titulo-modal-ocorrencia').textContent = 'Nova ocorrência';
+  document.getElementById('btn-modal-ocorrencia').textContent    = 'Registrar';
+  editandoOcorrenciaId = null;
+  abrirModal('modal-nova-ocorrencia');
+}
+
+// Fecha modal de ocorrência e reseta estado
+function fecharModalOcorrencia() {
+  editandoOcorrenciaId = null;
+  document.getElementById('titulo-modal-ocorrencia').textContent = 'Nova ocorrência';
+  document.getElementById('btn-modal-ocorrencia').textContent    = 'Registrar';
   fecharModal('modal-nova-ocorrencia');
-  mostrarToast('Ocorrência registrada');
 }
 
-// ═══════════════════════════════════════════════
-// FILTRAR OCORRÊNCIAS POR ETIQUETA
-// ═══════════════════════════════════════════════
+// Abre modal preenchido para editar ocorrência
+function abrirEdicaoOcorrencia(id) {
+  const ocorrencia = ocorrenciasCache[id];
+  if (!ocorrencia) return;
+
+  document.getElementById('ocorrencia-titulo').value    = ocorrencia.titulo;
+  document.getElementById('ocorrencia-descricao').value = ocorrencia.descricao;
+  document.getElementById('ocorrencia-tag').value       = ocorrencia.tag || 'RECLAMACAO';
+
+  document.getElementById('titulo-modal-ocorrencia').textContent = 'Editar ocorrência';
+  document.getElementById('btn-modal-ocorrencia').textContent    = 'Salvar alterações';
+
+  editandoOcorrenciaId = id;
+  abrirModal('modal-nova-ocorrencia');
+}
+
+// Submit do formulário de ocorrência
+function handleNovaOcorrencia(evento) {
+  evento.preventDefault();
+  const form = evento.target;
+
+  const dados = {
+    titulo:    form.titulo.value.trim(),
+    descricao: form.descricao.value.trim(),
+    tag:       form.tag.value,
+    urlImagem: null,
+    tipoPost:  'OCORRENCIA',
+    usuario:   { id: usuarioAtual.id },
+  };
+
+  if (!dados.titulo || !dados.descricao) {
+    mostrarToast('Preencha título e descrição');
+    return;
+  }
+
+  if (editandoOcorrenciaId !== null) {
+    atualizarOcorrencia(editandoOcorrenciaId, dados);
+  } else {
+    criarOcorrencia(dados);
+  }
+}
+
+async function criarOcorrencia(dados) {
+  try {
+    await postagemApi.criar(dados);
+    fecharModalOcorrencia();
+    mostrarToast('Ocorrência registrada com sucesso');
+    await carregarOcorrencias();
+  } catch (erro) {
+    console.error('Erro ao registrar ocorrência:', erro);
+    mostrarToast('Erro ao registrar ocorrência');
+  }
+}
+
+async function atualizarOcorrencia(id, dados) {
+  try {
+    await postagemApi.atualizar(id, dados);
+    fecharModalOcorrencia();
+    mostrarToast('Ocorrência atualizada com sucesso');
+    await carregarOcorrencias();
+  } catch (erro) {
+    console.error('Erro ao atualizar ocorrência:', erro);
+    mostrarToast('Erro ao atualizar ocorrência');
+  }
+}
+
+async function excluirOcorrencia(id, botao) {
+  if (!confirm('Excluir esta ocorrência?')) return;
+
+  try {
+    await postagemApi.deletar(id);
+    mostrarToast('Ocorrência excluída');
+    await carregarOcorrencias();
+  } catch (erro) {
+    console.error('Erro ao excluir ocorrência:', erro);
+    mostrarToast('Erro ao excluir ocorrência');
+  }
+}
+
+// Up vote — ainda sem endpoint dedicado; incrementa localmente e atualiza via PUT
+async function alternarVoto(botao, id) {
+  const elContador  = botao.querySelector('span');
+  const estaAtivo   = botao.classList.toggle('ativo');
+  const valorAtual  = parseInt(elContador.textContent);
+  const novoValor   = estaAtivo ? valorAtual + 1 : valorAtual - 1;
+  elContador.textContent = novoValor;
+
+  const ocorrencia = ocorrenciasCache[id];
+  if (!ocorrencia) return;
+
+  try {
+    await postagemApi.atualizar(id, {
+      ...ocorrencia,
+      qtdeUpvotes: novoValor,
+      usuario: { id: ocorrencia.usuario.id },
+    });
+    ocorrenciasCache[id] = { ...ocorrencia, qtdeUpvotes: novoValor };
+  } catch (erro) {
+    // Reverte visualmente em caso de falha
+    botao.classList.toggle('ativo');
+    elContador.textContent = valorAtual;
+    console.error('Erro ao registrar voto:', erro);
+  }
+}
+
+// Filtrar ocorrências por etiqueta (client-side)
 function filtrarEtiqueta(botao, etiqueta) {
   document.querySelectorAll('[data-etiqueta]').forEach(card => {
-    const visivel = etiqueta === 'todas' || card.dataset.etiqueta === etiqueta;
+    const visivel = etiqueta === 'todas' || card.dataset.etiqueta === etiqueta.toLowerCase();
     card.style.display = visivel ? '' : 'none';
   });
 }
 
 // ═══════════════════════════════════════════════
-// ÁREAS COMUNS — SUSPENDER / REATIVAR / EXCLUIR
+// ──────────────── WIKI ──────────────────────
 // ═══════════════════════════════════════════════
-function suspenderArea(idArea, botao) {
-  const card = document.getElementById(idArea);
-  card.classList.add('suspensa');
 
-  botao.textContent   = 'Reativar';
-  botao.style.color   = 'var(--verde)';
-  botao.onclick       = function() { reativarArea(idArea, botao); };
-
-  mostrarToast('Área suspensa com sucesso');
+async function carregarWiki() {
+  // A wiki tem id fixo 1 — único registro por condomínio
+  try {
+    const wiki = await wikiApi.acharPorId(1);
+    wikiId = wiki.id;
+    renderizarConteudoWiki(wiki);
+  } catch (erro) {
+    // Wiki ainda não cadastrada — exibe estado vazio
+    console.warn('Wiki não encontrada:', erro);
+    wikiId = null;
+  }
 }
 
-function reativarArea(idArea, botao) {
-  const card = document.getElementById(idArea);
-  card.classList.remove('suspensa');
+function renderizarConteudoWiki(wiki) {
+  const elNome     = document.getElementById('nome-condominio-wiki');
+  const elConteudo = document.getElementById('conteudo-wiki');
 
-  botao.textContent   = 'Suspender';
-  botao.style.color   = 'var(--amarelo)';
-  botao.onclick       = function() { suspenderArea(idArea, botao); };
-
-  mostrarToast('Área reativada com sucesso');
+  if (elNome)     elNome.textContent     = wiki.nome;
+  if (elConteudo) elConteudo.textContent = wiki.descricao;
 }
 
-function excluirArea(idArea) {
+// Abre modal de edição da wiki preenchido com dados atuais
+async function abrirModalEditarWiki() {
+  if (wikiId) {
+    try {
+      const wiki = await wikiApi.acharPorId(wikiId);
+      document.getElementById('wiki-nome-input').value      = wiki.nome;
+      document.getElementById('wiki-descricao-input').value = wiki.descricao;
+    } catch (erro) {
+      console.error('Erro ao buscar wiki para edição:', erro);
+    }
+  }
+  abrirModal('modal-editar-wiki');
+}
+
+// Submit do formulário de wiki
+async function handleSalvarWiki() {
+  const nome      = document.getElementById('wiki-nome-input').value.trim();
+  const descricao = document.getElementById('wiki-descricao-input').value.trim();
+
+  if (!nome || !descricao) {
+    mostrarToast('Preencha nome e descrição da wiki');
+    return;
+  }
+
+  const dados = { nome, descricao };
+
+  try {
+    if (wikiId) {
+      await wikiApi.atualizar(wikiId, dados);
+    } else {
+      const criada = await wikiApi.criar(dados);
+      wikiId = criada.id;
+    }
+    fecharModal('modal-editar-wiki');
+    mostrarToast('Wiki atualizada com sucesso');
+    await carregarWiki();
+  } catch (erro) {
+    console.error('Erro ao salvar wiki:', erro);
+    mostrarToast('Erro ao salvar wiki');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ──────────────── ÁREAS COMUNS ──────────────
+// ═══════════════════════════════════════════════
+
+async function carregarAreasComuns() {
+  const container = document.getElementById('lista-areas');
+  try {
+    const areas = await areaComumApi.listar();
+    areasCache = {};
+
+    if (!areas || areas.length === 0) {
+      container.innerHTML = htmlEstadoVazio('Nenhuma área comum cadastrada.');
+      return;
+    }
+
+    container.innerHTML = '';
+    areas.forEach(area => {
+      areasCache[area.id] = area;
+      const ehSindico = usuarioAtual.perfil === 'sindico';
+      const card = new CardAreaComum(area, ehSindico);
+      container.innerHTML += card.render();
+    });
+
+    // Atualiza o select de reserva com as áreas disponíveis
+    atualizarSelectAreasReserva(areas);
+  } catch (erro) {
+    console.error('Erro ao carregar áreas comuns:', erro);
+    container.innerHTML = htmlEstadoVazio('Erro ao carregar áreas. Tente novamente.');
+  }
+}
+
+// Atualiza o <select> de área no modal de reserva
+function atualizarSelectAreasReserva(areas) {
+  const seletor = document.getElementById('selecionar-area-reserva');
+  if (!seletor) return;
+
+  seletor.innerHTML = '';
+  areas
+    .filter(a => a.estado !== 'SUSPENSA')
+    .forEach(area => {
+      const op = document.createElement('option');
+      op.value       = area.id;
+      op.textContent = area.nome;
+      seletor.appendChild(op);
+    });
+}
+
+// Abre modal de nova área (cria)
+function abrirModalCriarArea() {
+  document.getElementById('form-area').reset();
+  document.getElementById('titulo-modal-area').textContent = 'Nova área comum';
+  document.getElementById('btn-modal-area').textContent    = 'Criar área';
+  editandoAreaId = null;
+  abrirModal('modal-nova-area');
+}
+
+// Fecha modal de área e reseta estado
+function fecharModalArea() {
+  editandoAreaId = null;
+  fecharModal('modal-nova-area');
+}
+
+// Abre modal preenchido para editar área
+function abrirEdicaoArea(id) {
+  const area = areasCache[id];
+  if (!area) return;
+
+  document.getElementById('area-nome').value   = area.nome;
+  document.getElementById('area-estado').value = area.estado;
+
+  document.getElementById('titulo-modal-area').textContent = 'Editar área';
+  document.getElementById('btn-modal-area').textContent    = 'Salvar alterações';
+
+  editandoAreaId = id;
+  abrirModal('modal-nova-area');
+}
+
+// Submit do formulário de área
+function handleSalvarArea(evento) {
+  evento.preventDefault();
+  const form = evento.target;
+
+  const dados = {
+    nome:   form.nome.value.trim(),
+    estado: form.estado.value,
+  };
+
+  if (!dados.nome || !dados.estado) {
+    mostrarToast('Preencha nome e estado da área');
+    return;
+  }
+
+  if (editandoAreaId !== null) {
+    atualizarAreaComum(editandoAreaId, dados);
+  } else {
+    criarAreaComum(dados);
+  }
+}
+
+async function criarAreaComum(dados) {
+  try {
+    await areaComumApi.criar(dados);
+    fecharModalArea();
+    mostrarToast('Área criada com sucesso');
+    await carregarAreasComuns();
+  } catch (erro) {
+    console.error('Erro ao criar área:', erro);
+    mostrarToast('Erro ao criar área');
+  }
+}
+
+async function atualizarAreaComum(id, dados) {
+  try {
+    await areaComumApi.atualizar(id, dados);
+    fecharModalArea();
+    mostrarToast('Área atualizada com sucesso');
+    await carregarAreasComuns();
+  } catch (erro) {
+    console.error('Erro ao atualizar área:', erro);
+    mostrarToast('Erro ao atualizar área');
+  }
+}
+
+async function excluirAreaComum(id) {
   if (!confirm('Excluir esta área e cancelar todas as reservas vinculadas?')) return;
-  document.getElementById(idArea).remove();
-  mostrarToast('Área excluída');
+  try {
+    await areaComumApi.deletar(id);
+    mostrarToast('Área excluída');
+    await carregarAreasComuns();
+  } catch (erro) {
+    console.error('Erro ao excluir área:', erro);
+    mostrarToast('Erro ao excluir área');
+  }
+}
+
+async function suspenderAreaComum(id) {
+  const area = areasCache[id];
+  if (!area) return;
+  try {
+    await areaComumApi.atualizar(id, { ...area, estado: 'SUSPENSA' });
+    mostrarToast('Área suspensa com sucesso');
+    await carregarAreasComuns();
+  } catch (erro) {
+    console.error('Erro ao suspender área:', erro);
+    mostrarToast('Erro ao suspender área');
+  }
+}
+
+async function reativarAreaComum(id) {
+  const area = areasCache[id];
+  if (!area) return;
+  try {
+    await areaComumApi.atualizar(id, { ...area, estado: 'DISPONIVEL' });
+    mostrarToast('Área reativada com sucesso');
+    await carregarAreasComuns();
+  } catch (erro) {
+    console.error('Erro ao reativar área:', erro);
+    mostrarToast('Erro ao reativar área');
+  }
 }
 
 // ═══════════════════════════════════════════════
-// RESERVAS — DEFINIR ÁREA PRÉ-SELECIONADA
+// ──────────────── RESERVAS ──────────────────
 // ═══════════════════════════════════════════════
+
+// Abre modal de reserva pré-selecionando a área
+function abrirModalReserva(idArea, nomeArea) {
+  const seletor = document.getElementById('selecionar-area-reserva');
+  if (seletor) seletor.value = idArea;
+  definirLabelSemana();
+  abrirModal('modal-reservar');
+}
+
+// Compatibilidade com chamadas antigas
 function definirAreaReserva(nomeArea) {
   const seletor = document.getElementById('selecionar-area-reserva');
   if (!seletor) return;
   for (let i = 0; i < seletor.options.length; i++) {
-    if (seletor.options[i].text === nomeArea) {
-      seletor.selectedIndex = i;
-      break;
-    }
+    if (seletor.options[i].text === nomeArea) { seletor.selectedIndex = i; break; }
   }
 }
 
-// ═══════════════════════════════════════════════
-// CONFIRMAR RESERVA E GERAR CÓDIGO DE ACESSO
-// ═══════════════════════════════════════════════
-function confirmarReserva() {
-  const campoData = document.getElementById('data-reserva');
-  const dataEscolhida = campoData.value;
+// Confirma reserva, envia para API e exibe código
+async function confirmarReserva() {
+  const idArea        = document.getElementById('selecionar-area-reserva').value;
+  const dataStr       = document.getElementById('data-reserva').value;
+  const periodoValor  = document.getElementById('periodo-reserva').value;
 
-  if (dataEscolhida) {
-    const hoje        = new Date();
-    const dataSelecionada = new Date(dataEscolhida + 'T00:00:00');
-    const diferencaDias   = (dataSelecionada - hoje) / (1000 * 60 * 60 * 24);
+  if (!idArea || !dataStr || !periodoValor) {
+    mostrarToast('Preencha todos os campos da reserva');
+    return;
+  }
 
-    if (diferencaDias > 7 || diferencaDias < -1) {
-      mostrarToast('Só é possível reservar dentro da semana corrente');
-      return;
+  // Monta dataInicio e dataFim com base no período
+  const [horaInicio, horaFim] = periodoValor.split('-');
+  const dataInicio = `${dataStr}T${horaInicio}:00`;
+  const dataFim    = `${dataStr}T${horaFim}:00`;
+
+  // Valida semana corrente
+  const hoje            = new Date();
+  const dataSelecionada = new Date(dataInicio);
+  const diferencaDias   = (dataSelecionada - hoje) / (1000 * 60 * 60 * 24);
+
+  if (diferencaDias > 7 || diferencaDias < -1) {
+    mostrarToast('Só é possível reservar dentro da semana corrente');
+    return;
+  }
+
+  const dados = {
+    usuario:   { id: usuarioAtual.id },
+    areaComum: { id: Number(idArea) },
+    dataInicio,
+    dataFim,
+  };
+
+  try {
+    await reservaApi.criar(dados);
+    fecharModal('modal-reservar');
+
+    // Gera código de acesso aleatório (visual — backend não retorna código ainda)
+    const caracteres = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let codigo = '';
+    for (let i = 0; i < 8; i++) {
+      if (i === 4) codigo += '-';
+      codigo += caracteres[Math.floor(Math.random() * caracteres.length)];
     }
+    document.getElementById('codigo-gerado').textContent = codigo;
+    abrirModal('modal-codigo');
+
+    await carregarAreasComuns();
+    await carregarReservasSemana();
+  } catch (erro) {
+    console.error('Erro ao criar reserva:', erro);
+    mostrarToast('Erro ao confirmar reserva: ' + erro.message);
+  }
+}
+
+// Carrega e renderiza a tabela de reservas da semana
+async function carregarReservasSemana() {
+  const container = document.getElementById('container-grade-reservas');
+  if (!container) return;
+
+  try {
+    const reservas = await reservaApi.listar();
+    renderizarGradeReservas(reservas);
+  } catch (erro) {
+    console.error('Erro ao carregar reservas:', erro);
+  }
+}
+
+// Renderiza a grade de reservas dinamicamente
+function renderizarGradeReservas(reservas) {
+  const hoje         = new Date();
+  const diaSemana    = hoje.getDay();
+  const difSegunda   = diaSemana === 0 ? -6 : 1 - diaSemana;
+  const segunda      = new Date(hoje);
+  segunda.setDate(hoje.getDate() + difSegunda);
+
+  const diasSemana   = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(segunda);
+    d.setDate(segunda.getDate() + i);
+    diasSemana.push(d);
   }
 
-  fecharModal('modal-reservar');
+  const nomeDias     = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  const periodos     = [
+    { rotulo: '08h–12h', inicio: 8,  fim: 12 },
+    { rotulo: '13h–18h', inicio: 13, fim: 18 },
+    { rotulo: '19h–23h', inicio: 19, fim: 23 },
+  ];
 
-  const caracteres = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let codigo = '';
-  for (let i = 0; i < 8; i++) {
-    if (i === 4) codigo += '-';
-    codigo += caracteres[Math.floor(Math.random() * caracteres.length)];
-  }
+  // Monta índice de reservas por dia+período
+  const reservasPorCelula = {};
+  reservas.forEach(r => {
+    const dataInicio = new Date(r.dataInicio);
+    const chave      = `${dataInicio.toDateString()}-${dataInicio.getHours()}`;
+    reservasPorCelula[chave] = r;
+  });
 
-  document.getElementById('codigo-gerado').textContent = codigo;
-  abrirModal('modal-codigo');
+  let html = '<div class="grade-reservas" style="min-width:560px;">';
+
+  // Cabeçalho
+  html += '<div class="celula-reserva cabecalho"></div>';
+  diasSemana.forEach((dia, i) => {
+    const diaNum = String(dia.getDate()).padStart(2, '0');
+    html += `<div class="celula-reserva cabecalho">${nomeDias[i]} ${diaNum}</div>`;
+  });
+
+  // Linhas por período
+  periodos.forEach(periodo => {
+    html += `<div class="celula-reserva rotulo-hora">${periodo.rotulo}</div>`;
+    diasSemana.forEach(dia => {
+      const chave   = `${dia.toDateString()}-${periodo.inicio}`;
+      const reserva = reservasPorCelula[chave];
+
+      if (reserva) {
+        const nomeUsuario = reserva.usuario?.nome || 'Reservado';
+        const nomeArea    = reserva.areaComum?.nome || '';
+        html += `<div class="celula-reserva ocupada" title="${nomeUsuario} — ${nomeArea}">
+                   ${nomeUsuario.split(' ')[0]}<br/>${nomeArea}
+                 </div>`;
+      } else {
+        html += `<div class="celula-reserva disponivel"
+                      onclick="abrirModalReserva('','')">+</div>`;
+      }
+    });
+  });
+
+  html += '</div>';
+  document.getElementById('container-grade-reservas').innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════
 // LABEL DA SEMANA E LIMITES DO INPUT DE DATA
 // ═══════════════════════════════════════════════
 function definirLabelSemana() {
-  const hoje = new Date();
+  const hoje      = new Date();
   const diaSemana = hoje.getDay();
 
-  const difParaSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
-  const segunda = new Date(hoje);
-  segunda.setDate(hoje.getDate() + difParaSegunda);
+  const difSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
+  const segunda    = new Date(hoje);
+  segunda.setDate(hoje.getDate() + difSegunda);
 
   const domingo = new Date(segunda);
   domingo.setDate(segunda.getDate() + 6);
@@ -482,78 +966,68 @@ function definirLabelSemana() {
 
   const campoData = document.getElementById('data-reserva');
   if (campoData) {
-    const hojeStr   = hoje.toISOString().split('T')[0];
+    const hojeStr    = hoje.toISOString().split('T')[0];
     const domingoStr = domingo.toISOString().split('T')[0];
-    campoData.min   = hojeStr;
-    campoData.max   = domingoStr;
-    campoData.value = hojeStr;
+    campoData.min    = hojeStr;
+    campoData.max    = domingoStr;
+    campoData.value  = hojeStr;
   }
 }
 
 // ═══════════════════════════════════════════════
-// LISTAR POSTAGENS DO FÓRUM
+// EXPOSIÇÃO GLOBAL (chamadas via onclick no HTML)
 // ═══════════════════════════════════════════════
-async function listarPostagensForum() {
-   let container = document.getElementById('lista-forum');
-   let retorno = await postagemApi.listar();
-   postagensCache = {};
-
-   if(retorno.length > 0) {
-      container.innerHTML = '';
-      retorno.forEach(postagem => {
-        postagensCache[postagem.id] = postagem;
-        const card = new CardPostagemForum(postagem);
-        container.innerHTML += card.render();
-      });
-   } else {
-    container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:4rem;">
-        <svg width="36" height="36" fill="none" stroke="var(--texto-suave)" stroke-width="1.8" viewBox="0 0 24 24">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          <path d="M8 9h8"/>
-          <path d="M8 13h5"/>
-        </svg>
-
-        <p style="font-size:14px;font-weight:500;color:var(--texto-secundario);margin:0;">
-          Não há postagens para mostrar.
-        </p>
-      </div>`
-   }
-   
-}
-
 Object.assign(window, {
+  // Auth
   aplicarMascaraCPF,
   realizarLogin,
   entrarComo,
   realizarLogout,
   abrirModalEsqueciSenha,
+  // Navegação
   mostrarPagina,
   trocarAba,
+  // Modais
   abrirModal,
   fecharModal,
   fecharModalFora,
-  fecharModalAviso,
-  abrirModalCriarAviso,
+  // Drawer
   abrirDrawerPerfil,
   fecharDrawerPerfil,
-  alternarVoto,
+  // Fórum
+  abrirModalCriarAviso,
+  fecharModalAviso,
+  handleNovaPostagemForum,
+  editarPost,
   excluirPost,
   alternarPin,
-  editarPost,
-  criarPostagem,
-  atualizarPostagem,
-  handleNovaPostagemForum,
-  enviarOcorrencia,
+  // Ocorrências
+  abrirModalCriarOcorrencia,
+  fecharModalOcorrencia,
+  abrirEdicaoOcorrencia,
+  handleNovaOcorrencia,
+  excluirOcorrencia,
+  alternarVoto,
   filtrarEtiqueta,
-  suspenderArea,
-  reativarArea,
-  excluirArea,
+  // Wiki
+  abrirModalEditarWiki,
+  handleSalvarWiki,
+  // Áreas comuns
+  abrirModalCriarArea,
+  fecharModalArea,
+  abrirEdicaoArea,
+  handleSalvarArea,
+  excluirAreaComum,
+  suspenderAreaComum,
+  reativarAreaComum,
+  // Reservas
+  abrirModalReserva,
   definirAreaReserva,
-  confirmarReserva
+  confirmarReserva,
+  definirLabelSemana,
 });
 
 // ═══════════════════════════════════════════════
 // INICIALIZAÇÃO
 // ═══════════════════════════════════════════════
-listarPostagensForum();
 definirLabelSemana();
