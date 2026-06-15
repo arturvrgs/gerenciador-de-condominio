@@ -5,7 +5,7 @@ import com.squad.condominions.model.Postagem;
 import com.squad.condominions.model.Usuario;
 import com.squad.condominions.model.Wiki;
 import com.squad.condominions.repository.WikiRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
