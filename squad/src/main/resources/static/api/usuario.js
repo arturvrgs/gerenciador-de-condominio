@@ -8,4 +8,5 @@ export const usuarioApi = {
   criar:      (usuario)    => http.post(PATH, usuario),
   atualizar:  (id, usuario)=> http.put(`${PATH}/${id}`, usuario),
   deletar:    (id)         => http.delete(`${PATH}/${id}`),
+  login: (cpf, senha) => http.post(`${PATH}/login`, { cpf, senha }),
 };

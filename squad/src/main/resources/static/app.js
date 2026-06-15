@@ -5,6 +5,7 @@ import { postagemApi }       from './api/postagem.js';
 import { areaComumApi }      from './api/areacomum.js';
 import { reservaApi }        from './api/reserva.js';
 import { wikiApi }           from './api/wiki.js';
+import { usuarioApi } from './api/usuario.js';
 
 // ═══════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -59,15 +60,32 @@ function aplicarMascaraCPF(campo) {
 // ═══════════════════════════════════════════════
 // AUTENTICAÇÃO
 // ═══════════════════════════════════════════════
-function realizarLogin() {
+async function realizarLogin() {
   const cpf   = document.getElementById('campo-cpf').value;
   const senha = document.getElementById('campo-senha').value;
+
   if (!cpf || !senha) {
     mostrarToast('Preencha CPF e senha');
     return;
   }
-  // TODO: integrar endpoint de autenticação quando implementado
-  entrarComo('sindico');
+
+  try {
+    const usuario = await usuarioApi.login(cpf, senha);
+    usuarioAtual = {
+      id:       usuario.id,
+      nome:     `${usuario.nome} ${usuario.sobrenome}`,
+      perfil:   usuario.tipo === 'ADMINISTRADOR' ? 'sindico' : 'morador',
+      iniciais: usuario.nome.charAt(0).toUpperCase(),
+    };
+    aplicarPermissoesDePerfil();
+    trocarTela('tela-app');
+    carregarForum();
+    carregarOcorrencias();
+    carregarAreasComuns();
+    carregarWiki();
+  } catch (erro) {
+    mostrarToast('CPF ou senha incorretos');
+  }
 }
 
 function entrarComo(perfil) {
