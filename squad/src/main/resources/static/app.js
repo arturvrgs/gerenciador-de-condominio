@@ -279,7 +279,7 @@ async function carregarForum() {
     container.innerHTML = '';
     ordenadas.forEach(postagem => {
       postagensForumCache[postagem.id] = postagem;
-      const card = new CardPostagemForum(postagem);
+      const card = new CardPostagemForum(postagem, usuarioAtual.perfil === 'sindico');
       container.innerHTML += card.render();
     });
   } catch (erro) {
@@ -575,14 +575,12 @@ function filtrarEtiqueta(botao, etiqueta) {
 // ═══════════════════════════════════════════════
 
 async function carregarWiki() {
-  // A wiki tem id fixo 1 — único registro por condomínio
   try {
-    const wiki = await wikiApi.acharPorId(1);
+    const wiki = await wikiApi.buscarPrimeira();
     wikiId = wiki.id;
     renderizarConteudoWiki(wiki);
   } catch (erro) {
-    // Wiki ainda não cadastrada — exibe estado vazio
-    console.warn('Wiki não encontrada:', erro);
+    console.warn('Wiki não cadastrada ainda:', erro);
     wikiId = null;
   }
 }
@@ -590,9 +588,11 @@ async function carregarWiki() {
 function renderizarConteudoWiki(wiki) {
   const elNome     = document.getElementById('nome-condominio-wiki');
   const elConteudo = document.getElementById('conteudo-wiki');
+  const elData     = document.getElementById('data-atualizacao-wiki');
 
   if (elNome)     elNome.textContent     = wiki.nome;
   if (elConteudo) elConteudo.textContent = wiki.descricao;
+  if (elData)     elData.textContent     = 'Última atualização: ' + new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 // Abre modal de edição da wiki preenchido com dados atuais

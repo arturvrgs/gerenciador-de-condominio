@@ -140,4 +140,7 @@ public class Postagem {
     public void setTipoPost(TipoPost tipoPost) {
         this.tipoPost = tipoPost;
     }
+
+    public void setQtdeUpvotes(int qtdeUpvotes) {
+    }
 }

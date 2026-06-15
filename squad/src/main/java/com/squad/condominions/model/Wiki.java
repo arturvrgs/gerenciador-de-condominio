@@ -20,6 +20,8 @@ public class Wiki {
         this.descricao = descricao;
     }
 
+    public Wiki() {}
+
     public Long getId() {
         return id;
     }

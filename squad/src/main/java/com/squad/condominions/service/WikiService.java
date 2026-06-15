@@ -47,4 +47,13 @@ public class WikiService {
 
         return ResponseEntity.status(HttpStatus.OK).body(achado);
     }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<Wiki> buscarPrimeira() {
+        return repository.findAll()
+                .stream()
+                .findFirst()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

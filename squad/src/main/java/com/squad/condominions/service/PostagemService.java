@@ -59,6 +59,7 @@ public class PostagemService {
         existente.setDescricao(postagem.getDescricao());
         existente.setUrlImagem(postagem.getUrlImagem());
         existente.setTag(postagem.getTag());
+        existente.setQtdeUpvotes(postagem.getQtdeUpvotes());
 
         repository.save(existente);
 
